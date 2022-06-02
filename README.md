@@ -31,6 +31,38 @@ In [6]:
 
 ### Scrapper()
 
+#### get_random_user_agent()
+
+```python
+n [1]: from web_scrapper import Scrapper
+
+In [2]: sc = Scrapper()
+
+In [3]: sc.get_random_user_agent()
+Out[3]: 'Mozilla/5.0 (CrKey armv7l 1.5.16041) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.0 Safari/537.36'
+
+In [4]: sc.get_random_user_agent()
+Out[4]: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/'
+
+In [5]: sc.get_random_user_agent()
+Out[5]: 'Mozilla/5.0 (CrKey armv7l 1.5.16041) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.0 Safari/537.36'
+
+In [6]: sc.get_random_user_agent()
+Out[6]: 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1'
+
+In [7]: sc.get_random_user_agent()
+Out[7]: 'Mozilla/5.0 (CrKey armv7l 1.5.16041) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.0 Safari/537.36'
+
+In [8]: sc.get_random_user_agent()
+Out[8]: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/'
+
+In [9]: sc.get_random_user_agent()
+Out[9]: 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1'
+
+In [10]:
+```
+
+
 ```python
 In [2]: from web_scrapper import URL, Scrapper, LogConfig
    ...:

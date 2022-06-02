@@ -7,15 +7,15 @@ from typing import Any, Optional, Tuple
 from dataclasses import dataclass, InitVar
 from .logging import logger, LogConfig
 
-WebScrapperException(BasicException):
+class WebScrapperException(BaseException):
     pass
 
-WebScrapperCantFind(BasicException):
+class WebScrapperCantFind(WebScrapperException):
     pass
 
 USER_AGENTS = [
     ( 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:62.0)'
-      ' Gecko/20100101 Firefox/62.0' )
+      ' Gecko/20100101 Firefox/62.0' ),
     ( 'Mozilla/5.0 (CrKey armv7l 1.5.16041) AppleWebKit/537.36 '
       '(KHTML, like Gecko) Chrome/31.0.1650.0 Safari/537.36' ),
     ( 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
