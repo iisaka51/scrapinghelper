@@ -1,3 +1,4 @@
+import random
 import pandas as pd
 import requests
 from urllib.parse import urlparse, ParseResult
@@ -5,6 +6,27 @@ from requests_html import HTMLSession, HTML
 from typing import Any, Optional, Tuple
 from dataclasses import dataclass, InitVar
 from .logging import logger, LogConfig
+
+WebScrapperException(BasicException):
+    pass
+
+WebScrapperCantFind(BasicException):
+    pass
+
+USER_AGENTS = [
+    ( 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:62.0)'
+      ' Gecko/20100101 Firefox/62.0' )
+    ( 'Mozilla/5.0 (CrKey armv7l 1.5.16041) AppleWebKit/537.36 '
+      '(KHTML, like Gecko) Chrome/31.0.1650.0 Safari/537.36' ),
+    ( 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+      '(KHTML, like Gecko) Chrome/' ),
+    ( 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 '
+      '(KHTML, like Gecko) Version/' ),
+    ( 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 '
+      'Firefox/15.0.1' ),
+    ( 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 '
+      '(KHTML, like Gecko) Chrome/47.0.2526.111 Safari/537.36' ),
+]
 
 @dataclass
 class URL(object):
@@ -39,9 +61,6 @@ class URL(object):
         return str(self.url)
 
 class Scrapper(object):
-    user_agent = ( 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:62.0)'
-                   ' Gecko/20100101 Firefox/62.0' )
-
     def __init__(self,
                  timeout: Optional[int]=0,
                  sleep: Optional[int]=10,
@@ -54,7 +73,7 @@ class Scrapper(object):
         self.columns = list()
         self.values = list()
         self.df = pd.DataFrame()
-        self.headers = {"User-Agent": self.user_agent }
+        self.headers = {"User-Agent": self.get_random_user_agent() }
         self.session = None
         self.response = None
 
@@ -64,6 +83,12 @@ class Scrapper(object):
             logger.debug(f'LOG configure: {logconfig}')
         else:
             logger.disable(__name__)
+
+    def get_random_user_agent(self) ->str:
+        """ Random user agent.
+            :return: Random user agent from USER_AGENTS.
+        """
+        return random.choice(USER_AGENTS)
 
     def request(self,
                 url: URL,
