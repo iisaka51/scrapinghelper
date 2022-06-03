@@ -43,19 +43,28 @@ Out[9]: 'git'
 In [10]: url.set_query_val('src', 'csv')
 Out[10]: 'http://www.example.com/sample?src=csv&encode=jp'
 
-In [11]: url.get_root_address()
-Out[11]: 'http://www.example.com'
+In [11]: url
+Out[11]: http://www.example.com/sample?src=git&encode=jp
 
-In [12]: url.strip_query()
-Out[12]: 'http://www.example.com/sample'
+In [12]: url.set_query_val('src', 'csv',update=True)
+Out[12]: 'http://www.example.com/sample?src=csv&encode=jp'
 
-In [13]: url = URL('https://ja.wikipedia.org/wiki/日本語')
+In [13]: url
+Out[13]: http://www.example.com/sample?src=csv&encode=jp
 
-In [14]: url
-Out[14]: https://ja.wikipedia.org/wiki/%E6%97%A5%E6%9C%AC%E8%AA%9E
+In [14]: url.get_root_address()
+Out[14]: 'http://www.example.com'
 
-In [15]: url.decode()
-Out[15]: 'https://ja.wikipedia.org/wiki/日本語'
+In [15]: url.strip_query()
+Out[15]: 'http://www.example.com/sample'
+
+In [16]: url = URL('https://ja.wikipedia.org/wiki/日本語')
+
+In [17]: url
+Out[17]: https://ja.wikipedia.org/wiki/%E6%97%A5%E6%9C%AC%E8%AA%9E
+
+In [18]: url.decode()
+Out[18]: 'https://ja.wikipedia.org/wiki/日本語'
 
 ```
 
@@ -121,8 +130,8 @@ In [3]: from scrapper_tools import Scrapper, LogConfig
    ...:
    ...: content = response.content
    ...: print(f'code: {response.status_code}')
-2022-06-02T14:34:31.885790+0900 LOG configure: {'handlers': [{'sink': <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>, 'level': 'DEBUG', 'format': '<green>{time}</green> <level>{message}</level>', 'colorize': True, 'serialize': False}]}
-2022-06-02T14:34:31.886414+0900 URL: https://www.houjin-bangou.nta.go.jp/download/zenken/#csv-unicode
+2022-06-02T19:34:31.885790+0900 LOG configure: {'handlers': [{'sink': <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>, 'level': 'DEBUG', 'format': '<green>{time}</green> <level>{message}</level>', 'colorize': True, 'serialize': False}]}
+2022-06-02T19:34:31.886414+0900 URL: https://www.houjin-bangou.nta.go.jp/download/zenken/#csv-unicode
 2022-06-02T14:34:32.092599+0900 response status_code: 200
 code: 200
 

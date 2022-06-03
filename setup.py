@@ -19,6 +19,7 @@ requirements = [
     "request_html",
     "validators",
     "types-requests",
+    "loguru",
 ]
 
 setup(

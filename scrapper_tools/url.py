@@ -118,7 +118,7 @@ class URL(object):
             param: str,
             value: Union[str, int, float],
             url: Optional[str]=None,
-            create=False,
+            update=False,
             use_https=False
         ):
         """ Takes a url and changes the value of a query string parameter.
@@ -152,15 +152,11 @@ class URL(object):
         qs_val[f"{param}"] = value
         new_url = url.split("?")[0] + "?" + urlencode(qs_val)
 
-        if create:
-            self.query =  urlencode({param: value})
-            new_url = url + "?" + self.query
-
         if use_https:
             self.scheme = "https"
             new_url = new_url.replace("http://", "https://")
 
-        if not url:
+        if update:
             self.url = new_url
 
         return new_url
