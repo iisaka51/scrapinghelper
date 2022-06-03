@@ -4,15 +4,12 @@
 ### URL()
 
 ```python
-In [2]: from scrapper_tools import URL
+In [1]: from scrapper_tools import URL
 
-In [3]: url = URL('http://www.example.com/sample?src=git&encode=jp')
+In [2]: url = URL('http://www.example.com/sample?src=git&encode=jp')
 
-In [4]: url.is_valid
-Out[4]: True
-
-In [5]: url.__dict__
-Out[5]:
+In [3]: url.__dict__
+Out[3]:
 {'url': 'http://www.example.com/sample?src=git&encode=jp',
  'is_valid': True,
  'scheme': 'http',
@@ -26,15 +23,30 @@ Out[5]:
  'query': 'src=git&encode=jp',
  'fragment': ''}
 
-In [6]: url = URL('https://ja.wikipedia.org/wiki/日本語')
+In [4]: url.query
+Out[4]: 'src=git&encode=jp'
 
-In [7]: url
-Out[7]: https://ja.wikipedia.org/wiki/%E6%97%A5%E6%9C%AC%E8%AA%9E
+In [5]: url.get_query_val('src')
+Out[5]: 'git'
 
-In [8]: url.decode()
-Out[8]: 'https://ja.wikipedia.org/wiki/日本語'
+In [6]: url.set_query_val('src', 'csv')
+Out[6]: 'http://www.example.com/sample?src=csv&encode=jp'
 
-In [9]:
+In [7]: url.get_root_address()
+Out[7]: 'http://www.example.com'
+
+In [8]: url.strip_query()
+Out[8]: 'http://www.example.com/sample'
+
+In [9]: url = URL('https://ja.wikipedia.org/wiki/日本語')
+
+In [10]: url
+Out[10]: https://ja.wikipedia.org/wiki/%E6%97%A5%E6%9C%AC%E8%AA%9E
+
+In [11]: url.decode()
+Out[11]: 'https://ja.wikipedia.org/wiki/日本語'
+
+In [12]:
 ```
 
 ### Scrapper()
