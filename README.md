@@ -26,7 +26,15 @@ Out[5]:
  'query': 'src=git&encode=jp',
  'fragment': ''}
 
-In [6]:
+In [6]: url = URL('https://ja.wikipedia.org/wiki/日本語')
+
+In [7]: url
+Out[7]: https://ja.wikipedia.org/wiki/%E6%97%A5%E6%9C%AC%E8%AA%9E
+
+In [8]: url.decode()
+Out[8]: 'https://ja.wikipedia.org/wiki/日本語'
+
+In [9]:
 ```
 
 ### Scrapper()
