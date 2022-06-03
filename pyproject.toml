@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "web_scrapper"
-version = "0.1.0"
+name = "scrapper_tools"
+version = "0.1.4"
 description = "support class for web scraping"
 authors = ["Goichi (iisaka) Yukawa <iisaka51@gmail.com>"]
 license = "MIT"
