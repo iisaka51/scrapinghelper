@@ -3,26 +3,55 @@ from urllib.parse import (
     urlparse, parse_qsl, urlencode, quote, unquote,
  )
 from typing import Any, Optional, Tuple
-from dataclasses import dataclass, InitVar
 from validators.url import url as url_validator
 
-@dataclass
 class URL(object):
-    url: InitVar[str]=None
-
-    def __post_init__(self, url: str) -> str:
-        self.url = quote(url, safe=':/?&@=#%')
+    def __init__(self,
+        url: Optional[str]=None
+    ):
+        if url:
+            self.url = quote(url, safe=':/?&@=#%')
+        else:
+            self.url = ''
         ( self.is_valid,
-          self.scheme, self.netloc,
-          self.username, self.password, self.hostname, self.port,
-          self.path, self.params, self.query, self.fragment
+            self.scheme, self.netloc,
+            self.username, self.password, self.hostname, self.port,
+            self.path, self.params, self.query, self.fragment
         ) = self.__validator(url)
 
     def validator(self, url: str) -> bool:
+        """
+        Return whether or not given value is a valid URL
+        If the value is valid URL this function returns ``True``,
+        otherwise ``False``.
+
+        Parameters
+        ----------
+        url: str
+            The input url
+
+        Examples
+        --------
+         >>> from scrapper_tools import URL
+         >>> url = URL()
+         >>> url.validator('http://example.com')
+        True
+
+         >>> url.validator('ftp://example.com')
+        True
+
+        >>> url('http://10.0.0.1')
+        True
+
+        """
         return self.__validator(url)[0]
 
-    def __validator(self, url: str) -> Tuple[bool,
-                                           str, str, str, str, str, str]:
+    def __validator(self,
+        url: str
+    ) -> Tuple[bool,
+               str, str,
+               Optional[str], Optional[str], str, Optional[str],
+               str, str, str, str]:
 
         try:
             v = urlparse(url)

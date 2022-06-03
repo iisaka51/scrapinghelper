@@ -20,3 +20,8 @@ def bdistwheel(c):
 def upload(c):
     cmd = 'twine upload --repository pypi dist/*'
     c.run(cmd)
+
+@task(sdist, bdistwheel)
+def test_upload(c):
+    cmd = 'twine upload --repository testpypi dist/*'
+    c.run(cmd)

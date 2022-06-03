@@ -23,14 +23,14 @@ requirements = [
 
 setup(
     name="scrapper-tools",
-    version=get_version('scrapper-tools/versions.py'),
+    version=get_version('scrapper_tools/versions.py'),
     license="MIT",
     install_requirements=requirements,
     author="Goichi (Iisaka) Yukawa",
     author_email="iisaka51@gmail.com",
     url="https://github.com/iisaka51/scrapper-tools",
     description=SHORT_DESCRIPTION,
-    long_description=LONG_DESCRIPTION,,
+    long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
     packages=find_packages(),
     classifiers=[

@@ -46,7 +46,14 @@ Out[10]: https://ja.wikipedia.org/wiki/%E6%97%A5%E6%9C%AC%E8%AA%9E
 In [11]: url.decode()
 Out[11]: 'https://ja.wikipedia.org/wiki/日本語'
 
-In [12]:
+In [12]: u = URL()
+
+In [13]: u.validator('http://sample.om')
+Out[13]: True
+
+In [14]: u.validator('http://sample.')
+Out[14]: False
+
 ```
 
 ### Scrapper()
@@ -54,7 +61,7 @@ In [12]:
 #### get_random_user_agent()
 
 ```python
-n [1]: from web_scrapper import Scrapper
+n [1]: from scrapper_tools import Scrapper
 
 In [2]: sc = Scrapper()
 
@@ -84,7 +91,7 @@ In [10]:
 
 
 ```python
-In [2]: from web_scrapper import URL, Scrapper, LogConfig
+In [2]: from scrapper_tools import URL, Scrapper, LogConfig
    ...:
    ...: logconfig = LogConfig()
    ...: logconfig.level = 'INFO'
@@ -99,7 +106,7 @@ In [2]: from web_scrapper import URL, Scrapper, LogConfig
    ...:
 code: 200
 
-In [3]: from web_scrapper import URL, Scrapper, LogConfig
+In [3]: from scrapper_tools import Scrapper, LogConfig
    ...:
    ...: logconfig = LogConfig()
    ...: logconfig.level = 'DEBUG'
