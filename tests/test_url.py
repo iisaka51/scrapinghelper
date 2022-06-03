@@ -22,6 +22,7 @@ test_data = [
                 'params': '',
                 'query': '',
                 'fragment': 'csv-unicode',
+                'safe': ':/?&@=#%',
              }
         },
         {
@@ -40,6 +41,7 @@ test_data = [
                 'params': '',
                 'query': '',
                 'fragment': '',
+                'safe': ':/?&@=#%',
             }
         },
         {
@@ -58,6 +60,7 @@ test_data = [
                 'params': '',
                 'query': 'src=git&encode=jp',
                 'fragment': '',
+                'safe': ':/?&@=#%',
             }
         },
         {
@@ -76,6 +79,7 @@ test_data = [
                 'params': '',
                 'query': '',
                 'fragment': '',
+                'safe': ':/?&@=#%',
             }
         },
         {
@@ -94,6 +98,7 @@ test_data = [
                 'params': '',
                 'query': '',
                 'fragment': '',
+                'safe': ':/?&@=#%',
             }
         },
         {
@@ -112,6 +117,7 @@ test_data = [
                 'params': '',
                 'query': '',
                 'fragment': '',
+                'safe': ':/?&@=#%',
             }
         },
         {
@@ -130,11 +136,19 @@ test_data = [
                 'params': '',
                 'query': '',
                 'fragment': '',
+                'safe': ':/?&@=#%',
             }
         },
     ]
 
 class TestClass:
+    def test_url_simple_validator(self):
+        u = URL()
+        assert u.validator('http://example.com') == True
+        assert u.validator('ftp://example.com') == True
+        assert u.validator('python://example.com') == False
+        assert u.validator('python://example.') == False
+
     def test_url_validator(self):
         for d in test_data:
             url = URL(d['url'])
@@ -173,8 +187,16 @@ class TestClass:
         assert url.url == expect
         assert url.encode('http://www.sameple.com/日本語') == expect
 
+    def test_url_encode_safe(self):
+        expect = 'http%3A//example.com'
+        src_url = 'http://example.com'
+        u = URL(safe='/?&@=#%')
+        assert u.encode(src_url) == expect
+
     def test_decode(self):
         expect =  'http://www.sameple.com/日本語'
-        url = URL('http://www.sameple.com/%E6%97%A5%E6%9C%AC%E8%AA%9E')
+        src_url = 'http://www.sameple.com/%E6%97%A5%E6%9C%AC%E8%AA%9E'
+        url = URL(src_url)
         assert url.decode() == expect
-        assert url.decode('http://www.sameple.com/%E6%97%A5%E6%9C%AC%E8%AA%9E') == expect
+        assert url.decode(src_url) == expect
+
