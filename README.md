@@ -4,27 +4,27 @@
 ### URL()
 
 ```python
-In [2]: from web_scrapper import URL, Scrapper, LogConfig
-   ...:
-   ...: url = URL('https://www.houjin-bangou.nta.go.jp/download/zenken/#csv-unic
-   ...: ode')
+In [2]: from scrapper_tools import URL
 
-In [3]: url
-Out[3]: https://www.houjin-bangou.nta.go.jp/download/zenken/#csv-unicode
+In [3]: url = URL('http://www.example.com/sample?src=git&encode=jp')
 
 In [4]: url.is_valid
 Out[4]: True
 
 In [5]: url.__dict__
 Out[5]:
-{'url': 'https://www.houjin-bangou.nta.go.jp/download/zenken/#csv-unicode',
+{'url': 'http://www.example.com/sample?src=git&encode=jp',
  'is_valid': True,
- 'scheme': 'https',
- 'netloc': 'www.houjin-bangou.nta.go.jp',
- 'path': '/download/zenken/',
+ 'scheme': 'http',
+ 'netloc': 'www.example.com',
+ 'username': None,
+ 'password': None,
+ 'hostname': 'www.example.com',
+ 'port': None,
+ 'path': '/sample',
  'params': '',
- 'query': '',
- 'fragment': 'csv-unicode'}
+ 'query': 'src=git&encode=jp',
+ 'fragment': ''}
 
 In [6]:
 ```
