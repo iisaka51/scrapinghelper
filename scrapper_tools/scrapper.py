@@ -23,6 +23,21 @@ class Scrapper(object):
                  max_user_agents: int=10,
                  logconfig: Optional[LogConfig]=None,
         ):
+        """
+        Pameters
+        --------
+        timeout: int
+            if provided, of how many long to wait after initial render.
+        sleep: int
+            if provided, of how many long to sleep after initial render.
+        max_user_agents: int
+            The number of user_agents to keep in memory. default is 10.
+        logconfig: LogConfig
+            if provided, configure for loguru.
+
+    If just ``sleep`` is provided, the rendering will wait *n* seconds, before
+    returning.
+        """
         self.timeout = timeout
         self.sleep = sleep
         self.max_count = max_count
@@ -37,7 +52,7 @@ class Scrapper(object):
 
         if logconfig:
             logger.remove()
-            logger.configure(**logconfig)
+            logger.configure(**(logconfig.config()))
             logger.debug(f'LOG configure: {logconfig}')
         else:
             logger.disable(__name__)

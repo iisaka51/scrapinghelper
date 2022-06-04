@@ -107,7 +107,7 @@ In [2]: from scrapper_tools import URL, Scrapper, LogConfig
    ...:
    ...: logconfig = LogConfig()
    ...: logconfig.level = 'INFO'
-   ...: sc = Scrapper(logconfig=logconfig.config())
+   ...: sc = Scrapper(logconfig=logconfig)
    ...:
    ...: url = URL('https://www.houjin-bangou.nta.go.jp/download/zenken/#csv-unic
    ...: ode')
@@ -122,7 +122,7 @@ In [3]: from scrapper_tools import Scrapper, LogConfig
    ...:
    ...: logconfig = LogConfig()
    ...: logconfig.level = 'DEBUG'
-   ...: sc = Scrapper(logconfig=logconfig.config())
+   ...: sc = Scrapper(logconfig=logconfig)
    ...:
    ...: url = URL('https://www.houjin-bangou.nta.go.jp/download/zenken/#csv-unic
    ...: ode')
