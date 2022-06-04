@@ -2,14 +2,11 @@ import random
 import numpy as np
 import pandas as pd
 import requests
-from urllib.parse import urlparse, ParseResult
 from requests_html import HTMLSession, HTML
 from typing import Any, Optional, Tuple
-from dataclasses import dataclass, InitVar
 from pathlib import Path
 from .logging import logger, LogConfig
 from .url import URL
-
 
 class WebScrapperException(BaseException):
     pass
@@ -17,39 +14,8 @@ class WebScrapperException(BaseException):
 class WebScrapperCantFind(WebScrapperException):
     pass
 
-@dataclass
-class URL(object):
-    url: InitVar[str]=None
-
-    def __post_init__(self, url: str) -> str:
-        self.url = url
-        ( self.is_valid,
-            self.scheme,
-            self.netloc,
-            self.path,
-            self.params,
-            self.query,
-            self.fragment ) = self.__validator(url)
-
-    def validator(self, url: str) -> bool:
-        return self.__validator(url)[0]
-
-    def __validator(self, url: str) -> Tuple[bool,
-                                           str, str, str, str, str, str]:
-
-        try:
-            v = urlparse(url)
-            v = ( all([v.scheme, v.netloc]),
-                  v.scheme, v.netloc, v.path, v.params, v.query, v.fragment)
-        except:
-            v = False
-            v = (v, '', '', '', '', '', '')
-        return v
-
-    def __repr__(self) -> str:
-        return str(self.url)
-
 class Scrapper(object):
+    __user_agent_count=10000
     def __init__(self,
                  timeout: Optional[int]=0,
                  sleep: Optional[int]=10,
@@ -79,8 +45,12 @@ class Scrapper(object):
     def get_random_user_agent(self) ->str:
         if self.user_agents.empty:
             data_file  = Path(__file__).parent / 'data/user_agents.csv'
+            skip=random.randint(1,int(self.__user_agent_count/2))
+            if ( skip + self.max_user_agents ) >= self.__user_agent_count:
+                skip = 0
             self.user_agents = pd.read_csv(data_file,
                                         header=[0],
+                                        skiprows=skip,
                                         nrows=self.max_user_agents)
             self.max_user_agents = len(self.user_agents)
         choose_idx = int(np.random.choice(self.max_user_agents,
