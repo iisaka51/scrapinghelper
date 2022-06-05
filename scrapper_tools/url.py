@@ -102,10 +102,8 @@ def url_validator(value, public=False):
     If the value is valid URL this function returns ``True``,
     otherwise ``False```.
 
-    This validator is based on the wonderful `URL validator of dperini`_.
-
-    .. _URL validator of dperini:
-        https://gist.github.com/dperini/729294
+    This validator is based on `validator of dperini`
+    See Also: https://gist.github.com/dperini/729294
 
     Examples::
 
@@ -124,8 +122,17 @@ def url_validator(value, public=False):
         >>> url('http://10.0.0.1', public=True)
         False
 
-    :param value: URL address string to validate
-    :param public: Set True to only allow a public IPAddress. (default=False)
+    Parameters
+    ----------
+    value: str
+        URL address string to validate
+    public: bool
+         If set True to only allow a public IPAddress. (default is False)
+
+    Returns
+    -------
+    result: bool
+        Return ``True`` if the value is valid URL, otherwise ``False``
     """
 
     check = pattern.match(value)
@@ -146,9 +153,7 @@ class URL(object):
         The class for URL.
         The url is quoted The %-escapes all characters.
 
-        Parameters
-        ----------
-        url: str
+        paramurl: str
             The any URL
         safe: str
             the additional safe chars.
