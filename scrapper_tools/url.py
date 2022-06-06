@@ -72,7 +72,7 @@ __regex = re.compile(  # noqa: W605
     # (IPv4-Embedded IPv6 Address)
     r"(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])"
     r")\]|"
-        # host name
+    # host name
     r"(?:(?:(?:xn--[-]{0,2})|[a-z\u00a1-\uffff\U00010000-\U0010ffff0-9]-?)*"
     r"[a-z\u00a1-\uffff\U00010000-\U0010ffff0-9]+)"
     # domain name
@@ -190,7 +190,7 @@ class URL(object):
 
         self.safe = safe or self.__default_safe
         if url:
-            if quote:
+            if do_quote:
                 self.url = quote(url, safe=self.safe)
             else:
                 self.url = url

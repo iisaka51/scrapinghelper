@@ -187,6 +187,11 @@ class TestClass:
         assert url.url == expect
         assert url.quote('http://www.sameple.com/日本語') == expect
 
+    def test_do_quote(self):
+        expect = 'http://www.sameple.com/日本語'
+        url = URL('http://www.sameple.com/日本語', do_quote=False)
+        assert url.url == expect
+
     def test_url_quote_safe(self):
         expect = 'http%3A//example.com'
         src_url = 'http://example.com'
