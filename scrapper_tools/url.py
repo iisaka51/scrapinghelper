@@ -107,19 +107,19 @@ def url_validator(value, public=False):
 
     Examples::
 
-        >>> url('http://example.com')
+        >>> url_validator('http://example.com')
         True
 
-        >>> url('ftp://example.com')
+        >>> url_validator('ftp://example.com')
         True
 
-        >>> url('http://example.d')
+        >>> url_validator('http://example.d')
         False
 
-        >>> url('http://10.0.0.1')
+        >>> url_validator('http://10.0.0.1')
         True
 
-        >>> url('http://10.0.0.1', public=True)
+        >>> url_validator('http://10.0.0.1', public=True)
         False
 
     Parameters
@@ -141,6 +141,8 @@ def url_validator(value, public=False):
                                     for key in ('private_ip', 'private_host'))
     else:
         result = check
+
+    result = True if result else False
     return result
 
 class ResultURLValidator(NamedTuple):
@@ -238,7 +240,7 @@ class URL(object):
 
         try:
             v = urlparse(url)
-            _is_valid =  True if url_validator(url) else False
+            _is_valid =  url_validator(url)
             _scheme = v.scheme
             _netloc = v.netloc
             _username = v.username
