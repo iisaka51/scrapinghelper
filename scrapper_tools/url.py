@@ -147,24 +147,37 @@ class URL(object):
     __default_safe: str = ':/?&@=#%'
     def __init__(self,
         url: Optional[str]=None,
+        do_quote: bool=True,
         safe: Optional[str]=None,
     ):
         f"""
         The class for URL.
         The url is quoted The %-escapes all characters.
 
-        paramurl: str
+        Parameters
+        ----------
+        url: str
             The any URL
+        do_quote: bool
+            Replace special characters in string using the %xx escape.
+            default is ``True``
         safe: str
             the additional safe chars.
             default safe chars is {self.__default_safe}
+
+        Return
+        ------
+        url: str
+            The url is quoted he %-escapes all characters.
         """
 
         self.safe = safe or self.__default_safe
         if url:
-            self.url = quote(url, safe=self.safe)
-        else:
-            self.url = ''
+            if quote:
+                self.url = quote(url, safe=self.safe)
+            else:
+                self.url = url
+
         ( self.is_valid,
             self.scheme, self.netloc,
             self.username, self.password, self.hostname, self.port,
@@ -207,26 +220,33 @@ class URL(object):
 
         try:
             v = urlparse(url)
-            val = ( False if not url_validator(url) else True,
+            is_valid =  url_validator(url)
+            val = ( is_valid,
                     v.scheme, v.netloc,
                     v.username, v.password, v.hostname, v.port,
                     v.path, v.params, v.query, v.fragment)
         except:
-            v = False
-            val = (v, '', '', '',
-                      None, None, '', None, '', '', '')
+            is_valid = False
+            val = (is_valid,
+                   '', '', '',
+                   None, None, '', None,
+                   '', '', '', '')
         return val
 
     def __repr__(self) -> str:
         return str(self.url)
 
-    def decode(self,
-            url: Optional[str]=None) -> str:
+    def unquote(self,
+            url: Optional[str]=None,
+            **kwargs: Any,
+        ) -> str:
         """ Take a decoded url
         Parameters
         ----------
         url: str
             The input url.
+        **kwrags:
+            pass to urllib.parse.unquote
 
         Returns
         -------
@@ -235,20 +255,24 @@ class URL(object):
 
         if not url:
             url = self.url
-        return unquote(url)
+        return unquote(url, **kwargs)
 
-    def encode(self,
-            url: Optional[str]=None) -> str:
+    def quote(self,
+            url: Optional[str]=None,
+            **kwargs: Any,
+        ) -> str:
         """ Take a decoded url
         Parameters
         ----------
-            url: str
-                The input url.
+        url: str
+            The input url.
+        **kwargs:
+            pass to urllib.parse.unquote
         """
         if not url:
             url = self.url
             val = ( f'{self.scheme}://{self.netloc}{self.path}{self.query}' )
-        return quote(url, safe=self.safe)
+        return quote(url, safe=self.safe, **kwargs)
 
     def set_query_val(self,
             param: str,

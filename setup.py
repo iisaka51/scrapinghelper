@@ -17,7 +17,6 @@ SHORT_DESCRIPTION = "Utility for web scraping."
 
 requirements = [
     "request_html",
-    "validators",
     "types-requests",
     "loguru",
 ]
