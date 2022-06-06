@@ -194,18 +194,11 @@ class URL(object):
                 self.url = quote(url, safe=self.safe)
             else:
                 self.url = url
-        v = self.__validator(url)
-        self.is_valid =  v.is_valid
-        self.scheme = v.scheme
-        self.netloc = v.netloc
-        self.username = v.username
-        self.password = v.password
-        self.hostname =  v.hostname
-        self.port = v.port
-        self.path = v.path
-        self.params = v.params
-        self.query = v.query
-        self.fragment = v.fragment
+        else:
+            self.url = None
+
+        v = self.__validator(self.url)
+        self.__dict__.update(v._asdict())
 
     def validator(self, url: str) -> bool:
         """
