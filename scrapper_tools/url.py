@@ -9,8 +9,7 @@ from typing import Any, Optional, Tuple, Union, NamedTuple
 ip_middle_octet = r"(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5]))"
 ip_last_octet = r"(?:\.(?:0|[1-9]\d?|1\d\d|2[0-4]\d|25[0-5]))"
 
-__regex = re.compile(  # noqa: W605
-    r"^"
+url_pattern = ( # noqa: W605
     # protocol identifier
     r"(?:(?:https?|ftp)://)"
     # user:pass authentication
@@ -90,11 +89,9 @@ __regex = re.compile(  # noqa: W605
     r"(?:\?\S*)?"
     # fragment
     r"(?:#\S*)?"
-    r"$",
-    re.UNICODE | re.IGNORECASE
 )
 
-pattern = re.compile(__regex)
+pattern = re.compile( r"^" + url_pattern + r"$", re.UNICODE | re.IGNORECASE)
 
 def url_validator(value, public=False):
     """
@@ -144,6 +141,58 @@ def url_validator(value, public=False):
 
     result = True if result else False
     return result
+
+
+def remove_urls(
+        text: str,
+        end_with: str ='',
+    ) -> str:
+    """ Remove any url in the text.
+    Parameters
+    ----------
+        text: str
+             The text to remove urls.
+        end_with: str
+             If set, only remove the URLs that finish with that
+             regular expression.
+             default is all the URLs are remvoed.
+    Returns
+    -------
+        removed_text: str
+            The same text but without urls.
+    """
+    return replace_urls(text, '', end_with)
+
+def replace_urls(
+        text: str,
+        replace: str,
+        end_with: str = '',
+    ) -> str:
+    """ Replace all the URLs with path by a text.
+    Patameters
+    ----------
+        text: str
+            The text to replace.
+        replace: str
+            The text to replace with.
+        end_with: str
+            A regular expression which the URL has to finish with.
+            default is replace all the URLs.
+    Returns
+    -------
+        removed_text: str
+    Known BUGS
+    ----------
+        This function is not perfect.
+    """
+    pattern = re.compile( url_pattern + end_with, re.UNICODE | re.IGNORECASE)
+    matches = list(re.finditer(pattern, text))
+    matches.reverse()
+    for match in matches:
+        start, end = match.span()[0], match.span()[1]
+        text = text[:start] + replace + text[end:]
+    return text
+
 
 class ResultURLValidator(NamedTuple):
     url: str

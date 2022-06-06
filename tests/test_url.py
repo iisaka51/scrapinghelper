@@ -2,7 +2,7 @@ import sys
 
 sys.path.insert(0,"../scrapper-tools")
 
-from scrapper_tools.url import URL
+from scrapper_tools.url import URL, remove_urls, replace_urls
 from pprint import pprint
 
 test_data = [
@@ -205,3 +205,63 @@ class TestClass:
         assert url.unquote() == expect
         assert url.unquote(src_url) == expect
 
+    def test_remove_urls(self):
+        src_data=(
+            "This is sample text.\n"
+            "http://www.google.com\n"
+            "http://www.yahoo.co.jp\n"
+            "[Google](http://www.google.com)\n"
+            "[Yahoo Japan](http://www.yahoo.co.jp)\n"
+            "Funny HooBar.\n"
+        )
+        expect=(
+            "This is sample text.\n"
+            "\n"
+            "\n"
+            "[Google]()\n"
+            "[Yahoo Japan]()\n"
+            "Funny HooBar.\n"
+        )
+        assert remove_urls(src_data) == expect
+
+    def test_remove_urls(self):
+        src_data=(
+            "This is sample text.\n"
+            "https://www.google.com\n"
+            "https://www.yahoo.co.jp\n"
+            "[Google](https://www.google.com)\n"
+            "[Yahoo Japan](https://www.yahoo.co.jp)\n"
+            "Funny HooBar.\n"
+        )
+        expect=(
+            "This is sample text.\n"
+            "https://www.google.com\n"
+            "\n"
+            "[Google](https://www.google.com)\n"
+            "[Yahoo Japan]()\n"
+            "Funny HooBar.\n"
+        )
+        assert remove_urls(src_data, end_with=".co.jp") == expect
+
+    def test_replace_urls(self):
+        src_data=(
+            "This is sample text.\n"
+            "https://www.google.com\n"
+            "https://www.yahoo.co.jp\n"
+            "https://example.co.jp/sample?src=csv\n"
+            "[Google](https://www.google.com)\n"
+            "[Yahoo](https://www.yahoo.co.jp)\n"
+            "Funny HooBar.\n"
+        )
+        expect=(
+            "This is sample text.\n"
+            "https://www.google.com\n"
+            "JAPAN\n"
+            "https://example.co.jp/sample?src=csv\n"
+            "[Google](https://www.google.com)\n"
+            "[Yahoo](JAPAN)\n"
+            "Funny HooBar.\n"
+        )
+        assert replace_urls(src_data,
+                            replace="JAPAN",
+                            end_with='.co.jp') == expect
