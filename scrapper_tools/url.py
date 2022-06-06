@@ -4,7 +4,7 @@ from urllib.parse import (
     ParseResult,
     urlparse, parse_qsl, urlencode, quote, unquote,
  )
-from typing import Any, Optional, Tuple, Union
+from typing import Any, Optional, Tuple, Union, NamedTuple
 
 ip_middle_octet = r"(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5]))"
 ip_last_octet = r"(?:\.(?:0|[1-9]\d?|1\d\d|2[0-4]\d|25[0-5]))"
@@ -143,6 +143,21 @@ def url_validator(value, public=False):
         result = check
     return result
 
+class ResultURLValidator(NamedTuple):
+    url: str
+    is_valid: bool
+    scheme: str
+    netloc: str
+    username: Optional[str]
+    password: Optional[str]
+    hostname: str
+    port: Optional[str]
+    path: str
+    params: str
+    query: str
+    fragment: str
+
+
 class URL(object):
     __default_safe: str = ':/?&@=#%'
     def __init__(self,
@@ -177,12 +192,18 @@ class URL(object):
                 self.url = quote(url, safe=self.safe)
             else:
                 self.url = url
-
-        ( self.is_valid,
-            self.scheme, self.netloc,
-            self.username, self.password, self.hostname, self.port,
-            self.path, self.params, self.query, self.fragment
-        ) = self.__validator(url)
+        v = self.__validator(url)
+        self.is_valid =  v.is_valid
+        self.scheme = v.scheme
+        self.netloc = v.netloc
+        self.username = v.username
+        self.password = v.password
+        self.hostname =  v.hostname
+        self.port = v.port
+        self.path = v.path
+        self.params = v.params
+        self.query = v.query
+        self.fragment = v.fragment
 
     def validator(self, url: str) -> bool:
         """
@@ -209,29 +230,43 @@ class URL(object):
         True
 
         """
-        return self.__validator(url)[0]
+        return self.__validator(url).is_valid
 
     def __validator(self,
         url: str
-    ) -> Tuple[bool,
-               str, str,
-               Optional[str], Optional[str], str, Optional[str],
-               str, str, str, str]:
+    ) -> ResultURLValidator:
 
         try:
             v = urlparse(url)
-            is_valid =  url_validator(url)
-            val = ( is_valid,
-                    v.scheme, v.netloc,
-                    v.username, v.password, v.hostname, v.port,
-                    v.path, v.params, v.query, v.fragment)
+            _is_valid =  True if url_validator(url) else False
+            _scheme = v.scheme
+            _netloc = v.netloc
+            _username = v.username
+            _password = v.password
+            _hostname =  v.hostname
+            _port = v.port
+            _path = v.path
+            _params = v.params
+            _query = v.query
+            _fragment = v.fragment
         except:
-            is_valid = False
-            val = (is_valid,
-                   '', '', '',
-                   None, None, '', None,
-                   '', '', '', '')
-        return val
+            _is_valid = False
+            _scheme = ''
+            _netloc = ''
+            _username = None
+            _password = None
+            _hostname =  ''
+            _port = None
+            _path = ''
+            _params = ''
+            _query = ''
+            _fragment = ''
+        result = ResultURLValidator(
+                    url, _is_valid,
+                    _scheme, _netloc,
+                    _username, _password, _hostname, _port,
+                    _path, _params, _query, _fragment)
+        return result
 
     def __repr__(self) -> str:
         return str(self.url)
@@ -250,7 +285,7 @@ class URL(object):
 
         Returns
         -------
-        decoded_url: str
+        unquoted_url: str
         """
 
         if not url:
@@ -268,10 +303,13 @@ class URL(object):
             The input url.
         **kwargs:
             pass to urllib.parse.unquote
+
+        Returns
+        -------
+        quoted_url: str
         """
         if not url:
             url = self.url
-            val = ( f'{self.scheme}://{self.netloc}{self.path}{self.query}' )
         return quote(url, safe=self.safe, **kwargs)
 
     def set_query_val(self,
@@ -280,7 +318,7 @@ class URL(object):
             url: Optional[str]=None,
             update=False,
             use_https=False
-        ):
+        ) -> str:
         """ Takes a url and changes the value of a query string parameter.
         Parameters
         ----------

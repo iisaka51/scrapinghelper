@@ -181,22 +181,22 @@ class TestClass:
         url = URL('http://www.example.com/sample?src=git&encode=jp')
         assert url.get_root_address() == expect
 
-    def test_encode(self):
+    def test_quote(self):
         expect =  'http://www.sameple.com/%E6%97%A5%E6%9C%AC%E8%AA%9E'
         url = URL('http://www.sameple.com/日本語')
         assert url.url == expect
-        assert url.encode('http://www.sameple.com/日本語') == expect
+        assert url.quote('http://www.sameple.com/日本語') == expect
 
-    def test_url_encode_safe(self):
+    def test_url_quote_safe(self):
         expect = 'http%3A//example.com'
         src_url = 'http://example.com'
         u = URL(safe='/?&@=#%')
-        assert u.encode(src_url) == expect
+        assert u.quote(src_url) == expect
 
-    def test_decode(self):
+    def test_unquote(self):
         expect =  'http://www.sameple.com/日本語'
         src_url = 'http://www.sameple.com/%E6%97%A5%E6%9C%AC%E8%AA%9E'
         url = URL(src_url)
-        assert url.decode() == expect
-        assert url.decode(src_url) == expect
+        assert url.unquote() == expect
+        assert url.unquote(src_url) == expect
 
