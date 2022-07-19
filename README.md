@@ -63,7 +63,7 @@ In [16]: url = URL('https://ja.wikipedia.org/wiki/日本語')
 In [17]: url
 Out[17]: https://ja.wikipedia.org/wiki/%E6%97%A5%E6%9C%AC%E8%AA%9E
 
-In [18]: url.unqupte()
+In [18]: url.unquote()
 Out[18]: 'https://ja.wikipedia.org/wiki/日本語'
 
 ```

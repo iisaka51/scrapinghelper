@@ -19,6 +19,7 @@ requirements = [
     "request_html",
     "types-requests",
     "loguru",
+    "numpy",
 ]
 
 setup(
@@ -33,6 +34,7 @@ setup(
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
     packages=find_packages(),
+    package_data={'': [ 'data/*.csv' ]},
     classifiers=[
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3.10",
