@@ -246,8 +246,8 @@ class URL(object):
         else:
             self.url = None
 
-        v = self.__validator(self.url)
-        self.__dict__.update(v._asdict())
+        self.validate = self.__validator(self.url)
+        self.__dict__.update(self.validate._asdict())
 
     def validator(self, url: str) -> bool:
         """
@@ -312,6 +312,10 @@ class URL(object):
                     _path, _params, _query, _fragment)
         return result
 
+    @property
+    def attrs(self):
+        return self.validate._asdict()
+
     def __repr__(self) -> str:
         return str(self.url)
 
@@ -319,7 +323,7 @@ class URL(object):
             url: Optional[str]=None,
             **kwargs: Any,
         ) -> str:
-        """ Take a decoded url
+        """ Take a unquoted url
         Parameters
         ----------
         url: str
@@ -340,7 +344,7 @@ class URL(object):
             url: Optional[str]=None,
             **kwargs: Any,
         ) -> str:
-        """ Take a decoded url
+        """ Take a quoted url
         Parameters
         ----------
         url: str
@@ -355,6 +359,10 @@ class URL(object):
         if not url:
             url = self.url
         return quote(url, safe=self.safe, **kwargs)
+
+    # alias names
+    encode = quote
+    decode = unquote
 
     def set_query_val(self,
             param: str,

@@ -1,8 +1,8 @@
 import sys
 
-sys.path.insert(0,"../scrapper-tools")
+sys.path.insert(0,"../scraper-tools")
 
-from scrapper_tools.url import URL, remove_urls, replace_urls
+from scraper_tools.url import URL, remove_urls, replace_urls
 from pprint import pprint
 
 test_data = [
@@ -22,7 +22,6 @@ test_data = [
                 'params': '',
                 'query': '',
                 'fragment': 'csv-unicode',
-                'safe': ':/?&@=#%',
              }
         },
         {
@@ -41,7 +40,6 @@ test_data = [
                 'params': '',
                 'query': '',
                 'fragment': '',
-                'safe': ':/?&@=#%',
             }
         },
         {
@@ -60,7 +58,6 @@ test_data = [
                 'params': '',
                 'query': 'src=git&encode=jp',
                 'fragment': '',
-                'safe': ':/?&@=#%',
             }
         },
         {
@@ -79,7 +76,6 @@ test_data = [
                 'params': '',
                 'query': '',
                 'fragment': '',
-                'safe': ':/?&@=#%',
             }
         },
         {
@@ -98,7 +94,6 @@ test_data = [
                 'params': '',
                 'query': '',
                 'fragment': '',
-                'safe': ':/?&@=#%',
             }
         },
         {
@@ -117,7 +112,6 @@ test_data = [
                 'params': '',
                 'query': '',
                 'fragment': '',
-                'safe': ':/?&@=#%',
             }
         },
         {
@@ -136,7 +130,6 @@ test_data = [
                 'params': '',
                 'query': '',
                 'fragment': '',
-                'safe': ':/?&@=#%',
             }
         },
     ]
@@ -157,7 +150,7 @@ class TestClass:
     def test_url_parse_attributes(self):
         for d in test_data:
             url = URL(d['url'])
-            assert url.__dict__ == d['attributes']
+            assert url.attrs == d['attributes']
 
     def test_url_get_query_val(self):
         url = URL('http://www.example.com/sample?src=git&encode=jp')
@@ -204,6 +197,8 @@ class TestClass:
         url = URL(src_url)
         assert url.unquote() == expect
         assert url.unquote(src_url) == expect
+        assert url.decode() == expect
+        assert url.decode(src_url) == expect
 
     def test_remove_urls(self):
         src_data=(

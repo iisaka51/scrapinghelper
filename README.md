@@ -19,7 +19,7 @@ In [5]: url = URL('http://www.example.com/sample?src=git&encode=jp')
 In [6]: url.is_valid
 Out[6]: True
 
-In [7]: url.__dict__
+In [7]: url.attrs
 Out[7]:
 {'url': 'http://www.example.com/sample?src=git&encode=jp',
  'is_valid': True,
