@@ -4,7 +4,7 @@
 ### URL()
 
 ```python
-In [1]: from scrapper_tools import URL
+In [1]: from scraper_tools import URL
 
 In [2]: u = URL()
 
@@ -68,14 +68,14 @@ Out[18]: 'https://ja.wikipedia.org/wiki/日本語'
 
 ```
 
-### Scrapper()
+### Scraper()
 
 #### get_random_user_agent()
 
 ```python
-n [1]: from scrapper_tools import Scrapper
+n [1]: from scraper_tools import Scraper
 
-In [2]: sc = Scrapper()
+In [2]: sc = Scraper()
 
 In [3]: sc.get_random_user_agent()
 Out[3]: 'Mozilla/5.0 (CrKey armv7l 1.5.16041) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.0 Safari/537.36'
@@ -103,11 +103,11 @@ In [10]:
 
 
 ```python
-In [2]: from scrapper_tools import URL, Scrapper, LogConfig
+In [2]: from scraper_tools import URL, Scraper, LogConfig
    ...:
    ...: logconfig = LogConfig()
    ...: logconfig.level = 'INFO'
-   ...: sc = Scrapper(logconfig=logconfig)
+   ...: sc = Scraper(logconfig=logconfig)
    ...:
    ...: url = URL('https://www.houjin-bangou.nta.go.jp/download/zenken/#csv-unic
    ...: ode')
@@ -118,11 +118,11 @@ In [2]: from scrapper_tools import URL, Scrapper, LogConfig
    ...:
 code: 200
 
-In [3]: from scrapper_tools import Scrapper, LogConfig
+In [3]: from scraper_tools import Scraper, LogConfig
    ...:
    ...: logconfig = LogConfig()
    ...: logconfig.level = 'DEBUG'
-   ...: sc = Scrapper(logconfig=logconfig)
+   ...: sc = Scraper(logconfig=logconfig)
    ...:
    ...: url = URL('https://www.houjin-bangou.nta.go.jp/download/zenken/#csv-unic
    ...: ode')

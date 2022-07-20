@@ -8,13 +8,13 @@ from pathlib import Path
 from .logging import logger, LogConfig
 from .url import URL
 
-class WebScrapperException(BaseException):
+class WebScraperException(BaseException):
     pass
 
-class WebScrapperCantFind(WebScrapperException):
+class WebScraperCantFind(WebScraperException):
     pass
 
-class Scrapper(object):
+class Scraper(object):
     __user_agent_count=10000
     def __init__(self,
                  timeout: Optional[int]=0,
