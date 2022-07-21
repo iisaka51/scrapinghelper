@@ -129,6 +129,7 @@ class Scraper(object):
         selector: str='a',
         startswith: Optional[Union[list,str]] = None,
         endswith: Optional[Union[list,str]] = None,
+        containing: Optional[Union[list,str]] = None,
         **kwargs: Any,
         ) -> list:
         """get links from contents of HTML object.
@@ -146,11 +147,17 @@ class Scraper(object):
             if endswith passed, return only endswith for basename of link.
             i.e.: link is 'http://example.com/example/sample.txt'
                   return this link when passed endswith('.txt').
+        containing: Optional[Union[list,str]] = None
+            if containing passed, return only word contain in basename of link.
+            i.e.: link is 'http://example.com/example/sample.txt'
+                  return this link when passed containing('sample').
         """
 
         if startswith and isinstance(startswith, str):
             startswith = [startswith]
         if endswith and isinstance(endswith, str):
+            endswith = [endswith]
+        if containing and isinstance(containing, str):
             endswith = [endswith]
         links = list()
         for e in html.find(selector, **kwargs):
@@ -158,7 +165,9 @@ class Scraper(object):
                 utl = URL(link)
                 if startswith and not any(url.basename.startswith(x) for x in startswith):
                     continue
-                if endswith and not any(url.basename(x) for x in endswith):
+                if endswith and not any(url.basename.endswith(x) for x in endswith):
+                    continue
+                if containing and not any(x in url.basename for x in containing):
                     continue
                 try:
                     links.append(TAG_LINK(text=e.text, link=URL(link)))
