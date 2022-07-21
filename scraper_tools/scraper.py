@@ -3,26 +3,13 @@ import numpy as np
 import pandas as pd
 import requests
 from requests_html import HTMLSession, HTML
-from typing import Any, Optional, Tuple
+from typing import Any, Optional, Union, NamedTuple
 from pathlib import Path
 from .logging import logger, LogConfig
 from .url import URL
 import ipaddress
 import random
-
-MAX_IPV4 = ipaddress.IPv4Address._ALL_ONES  # 2 ** 32 - 1
-MAX_IPV6 = ipaddress.IPv6Address._ALL_ONES  # 2 ** 128 - 1
-
-
-def random_ipv4():
-    return  ipaddress.IPv4Address._string_from_ip_int(
-        random.randint(0, MAX_IPV4)
-    )
-
-def random_ipv6():
-    return ipaddress.IPv6Address._string_from_ip_int(
-        random.randint(0, MAX_IPV6)
-    )
+import time
 
 class WebScraperException(BaseException):
     pass
@@ -30,12 +17,19 @@ class WebScraperException(BaseException):
 class WebScraperCantFind(WebScraperException):
     pass
 
+class TAG_LINK(NamedTuple):
+    text: str
+    link: Union[URL,str]
+
 class Scraper(object):
     __user_agent_count=10000
+    __MAX_IPV4 = ipaddress.IPv4Address._ALL_ONES  # 2 ** 32 - 1
+    __MAX_IPV6 = ipaddress.IPv6Address._ALL_ONES  # 2 ** 128 - 1
+
     def __init__(self,
-                 timeout: Optional[int]=0,
-                 sleep: Optional[int]=10,
-                 max_count: Optional[int]= 5,
+                 timeout: int=0,
+                 sleep: int=10,
+                 max_count: int= 5,
                  max_user_agents: int=10,
                  logconfig: Optional[LogConfig]=None,
         ):
@@ -88,11 +82,21 @@ class Scraper(object):
                                           replace=True, size=1))
         return self.user_agents.iloc[choose_idx, 1]
 
+    def get_random_ipv4(self) ->str:
+        return  ipaddress.IPv4Address._string_from_ip_int(
+            random.randint(0, self.__MAX_IPV4)
+        )
+
+    def get_random_ipv6(self) ->str:
+        return ipaddress.IPv6Address._string_from_ip_int(
+            random.randint(0, self.__MAX_IPV6)
+        )
+
     def request(self,
                 url: URL,
-                timeout: int=None,
-                sleep: int=None,
-                max_count: int=None,
+                timeout: int=0,
+                sleep: int=0,
+                max_count: int=0,
             ):
             self.timeout = timeout or self.timeout
             self.sleep = sleep or self.sleep
@@ -111,11 +115,77 @@ class Scraper(object):
             except requests.exceptions.RequestException as e:
                 self.logger.exception("request failed")
 
-    def ommit_char(self, values, omits):
+    def ommit_char(self,
+        values: str,
+        omits: str,
+        )-> str:
             omit_map = ((x, '') for x in omits)
             for n in range(len(values)):
                 values[n] = values[n].replace(*omit_map)
             return values
+
+    def get_links(self,
+        html: str,
+        tag: str='a',
+        endswith: Optional[Union[list,str]] = None
+        ) -> list:
+        if endswith and isinstance(endswith, str):
+            endswith = [endswith]
+        links = list()
+        for a in html.find(tag):
+            for link in a.links:
+                if endswith and not any(link.endswith(x) for x in endswith):
+                    continue
+                try:
+                    links.append(TAG_LINK(text=a.text, link=URL(link)))
+                except:
+                    pass
+
+        return links
+
+    def get_filename(self,
+        url: Union[URL, str],
+        replace: Optional[Union[list,tuple]]=None,
+        )-> bool:
+        if hasattr(url, 'is_valid') and url.is_valid:
+            filename = url.basename
+        else:
+            try:
+                filename = URL(url).basename
+            except:
+                filename = None
+
+        if filename and replace:
+            filename = filename.replace( replace )
+
+        return filename
+
+    def download_file(self,
+        url: Union[URL, str],
+        filename: Optional[str]=None,
+        sleep: int=0,
+        ) -> bool:
+
+
+        if not hasattr(url, 'is_valid'):
+            url = URL(url)
+
+        if not url.is_valid:
+            raise WebScraperException('Invalid url')
+
+        if not filename:
+            filename = url.basename
+
+        sleep = sleep or self.sleep
+        try:
+            if sleep:
+                time.sleep(sleep)
+            data = requests.get(url.url)
+            with open(filename, 'wb') as fp:
+                fp.write(data.content)
+            return True
+        except:
+            raise WebScraperException('download failed')
 
     def add_df(self, values, columns, omits = None):
             if omits is not None:

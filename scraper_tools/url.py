@@ -1,3 +1,4 @@
+import os
 import re
 
 from urllib.parse import (
@@ -207,6 +208,7 @@ class ResultURLValidator(NamedTuple):
     params: str
     query: str
     fragment: str
+    basename: str
 
 
 class URL(object):
@@ -293,6 +295,7 @@ class URL(object):
             _params = v.params
             _query = v.query
             _fragment = v.fragment
+            _basename = os.path.basename(unquote(v.path))
         except:
             _is_valid = False
             _scheme = ''
@@ -305,11 +308,14 @@ class URL(object):
             _params = ''
             _query = ''
             _fragment = ''
+            _basename = ''
+
         result = ResultURLValidator(
                     url, _is_valid,
                     _scheme, _netloc,
                     _username, _password, _hostname, _port,
-                    _path, _params, _query, _fragment)
+                    _path, _params, _query, _fragment, _basename)
+
         return result
 
     @property

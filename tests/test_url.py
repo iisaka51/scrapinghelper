@@ -22,6 +22,7 @@ test_data = [
                 'params': '',
                 'query': '',
                 'fragment': 'csv-unicode',
+                'basename': 'sample',
              }
         },
         {
@@ -40,6 +41,7 @@ test_data = [
                 'params': '',
                 'query': '',
                 'fragment': '',
+                'basename': 'sample',
             }
         },
         {
@@ -58,6 +60,7 @@ test_data = [
                 'params': '',
                 'query': 'src=git&encode=jp',
                 'fragment': '',
+                'basename': 'sample',
             }
         },
         {
@@ -76,6 +79,7 @@ test_data = [
                 'params': '',
                 'query': '',
                 'fragment': '',
+                'basename': 'sample',
             }
         },
         {
@@ -94,6 +98,7 @@ test_data = [
                 'params': '',
                 'query': '',
                 'fragment': '',
+                'basename': 'sample',
             }
         },
         {
@@ -112,6 +117,7 @@ test_data = [
                 'params': '',
                 'query': '',
                 'fragment': '',
+                'basename': 'sample',
             }
         },
         {
@@ -130,6 +136,7 @@ test_data = [
                 'params': '',
                 'query': '',
                 'fragment': '',
+                'basename': 'sample',
             }
         },
     ]
