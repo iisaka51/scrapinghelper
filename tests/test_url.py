@@ -22,7 +22,7 @@ test_data = [
                 'params': '',
                 'query': '',
                 'fragment': 'csv-unicode',
-                'basename': 'sample',
+                'basename': None,
              }
         },
         {
@@ -79,7 +79,7 @@ test_data = [
                 'params': '',
                 'query': '',
                 'fragment': '',
-                'basename': 'sample',
+                'basename': 'space here.html',
             }
         },
         {
@@ -98,7 +98,7 @@ test_data = [
                 'params': '',
                 'query': '',
                 'fragment': '',
-                'basename': 'sample',
+                'basename': 'and&here.html',
             }
         },
         {
@@ -117,7 +117,7 @@ test_data = [
                 'params': '',
                 'query': '',
                 'fragment': '',
-                'basename': 'sample',
+                'basename': 'and&here.html',
             }
         },
         {
@@ -136,7 +136,7 @@ test_data = [
                 'params': '',
                 'query': '',
                 'fragment': '',
-                'basename': 'sample',
+                'basename': None,
             }
         },
     ]

@@ -208,7 +208,7 @@ class ResultURLValidator(NamedTuple):
     params: str
     query: str
     fragment: str
-    basename: str
+    basename: Optional[str]
 
 
 class URL(object):
@@ -295,7 +295,7 @@ class URL(object):
             _params = v.params
             _query = v.query
             _fragment = v.fragment
-            _basename = os.path.basename(unquote(v.path))
+            _basename = os.path.basename(unquote(v.path)) or None
         except:
             _is_valid = False
             _scheme = ''
@@ -308,7 +308,7 @@ class URL(object):
             _params = ''
             _query = ''
             _fragment = ''
-            _basename = ''
+            _basename = None
 
         result = ResultURLValidator(
                     url, _is_valid,

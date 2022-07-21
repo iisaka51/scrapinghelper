@@ -164,8 +164,24 @@ class Scraper(object):
         url: Union[URL, str],
         filename: Optional[str]=None,
         sleep: int=0,
+        user_agent: Optional[str]=None,
         ) -> bool:
+        """download file from url
+        Parameters
+        ----------
+        url: Union[URL,str]
+            you must set url.
+        filename: str
+            if not set, using basename of deccoded url.
+        sleep: int
+            if not set, using sleep time of session.
+        user_agent: str
+            if not set, using user_agent of session.
+            if set as 'random', using random user_agent.
 
+        Return
+        download status: bool
+        """
 
         if not hasattr(url, 'is_valid'):
             url = URL(url)
@@ -176,11 +192,18 @@ class Scraper(object):
         if not filename:
             filename = url.basename
 
+        if not user_agent:
+            headers = self.headers
+        elif user_agent == 'random':
+            headers = {'User-Agent': self.get_random_user_agent() }
+        else:
+            headers = {'User-Agent': user_agent }
+
         sleep = sleep or self.sleep
         try:
             if sleep:
                 time.sleep(sleep)
-            data = requests.get(url.url)
+            data = requests.get(url.url, headers=headers)
             with open(filename, 'wb') as fp:
                 fp.write(data.content)
             return True

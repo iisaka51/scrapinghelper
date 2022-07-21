@@ -1,7 +1,7 @@
 
 ## How to use
 
-### URL()
+### class URL
 
 ```python
 In [1]: from scraper_tools import URL
@@ -68,7 +68,7 @@ Out[18]: 'https://ja.wikipedia.org/wiki/日本語'
 
 ```
 
-### Scraper()
+### class Scraper
 
 #### get_random_user_agent()
 
