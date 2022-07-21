@@ -140,17 +140,17 @@ class Scraper(object):
         selector: str
             CSS Selector or tag
         startswith: Optional[Union[list,str]] = None
-            if startswith passed, return only startswith for basename of link.
+            if startswith passed, return only startswith for basename of url.
             i.e.: link is 'http://example.com/example/sample.txt'
                   return this link when passed startswith('s').
         endswith: Optional[Union[list,str]] = None
-            if endswith passed, return only endswith for basename of link.
+            if endswith passed, return only endswith for basename of url.
             i.e.: link is 'http://example.com/example/sample.txt'
                   return this link when passed endswith('.txt').
         containing: Optional[Union[list,str]] = None
-            if containing passed, return only word contain in basename of link.
+            if containing passed, return only word contain in path of url.
             i.e.: link is 'http://example.com/example/sample.txt'
-                  return this link when passed containing('sample').
+                  return this link when passed containing('example').
         """
 
         if startswith and isinstance(startswith, str):
