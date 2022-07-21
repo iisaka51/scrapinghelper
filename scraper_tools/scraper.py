@@ -23,8 +23,6 @@ class TAG_LINK(NamedTuple):
 
 class Scraper(object):
     __user_agent_count=10000
-    __MAX_IPV4 = ipaddress.IPv4Address._ALL_ONES  # 2 ** 32 - 1
-    __MAX_IPV6 = ipaddress.IPv6Address._ALL_ONES  # 2 ** 128 - 1
 
     def __init__(self,
                  timeout: int=0,
@@ -83,13 +81,15 @@ class Scraper(object):
         return self.user_agents.iloc[choose_idx, 1]
 
     def get_random_ipv4(self) ->str:
+        MAX_IPV4 = ipaddress.IPv4Address._ALL_ONES  # 2 ** 32 - 1
         return  ipaddress.IPv4Address._string_from_ip_int(
-            random.randint(0, self.__MAX_IPV4)
+            random.randint(0, MAX_IPV4)
         )
 
     def get_random_ipv6(self) ->str:
+        MAX_IPV6 = ipaddress.IPv6Address._ALL_ONES  # 2 ** 128 - 1
         return ipaddress.IPv6Address._string_from_ip_int(
-            random.randint(0, self.__MAX_IPV6)
+            random.randint(0, MAX_IPV6)
         )
 
     def request(self,
@@ -125,19 +125,25 @@ class Scraper(object):
             return values
 
     def get_links(self,
-        html: str,
-        tag: str='a',
-        endswith: Optional[Union[list,str]] = None
+        html: HTML,
+        selector: str='a',
+        startswith: Optional[Union[list,str]] = None,
+        endswith: Optional[Union[list,str]] = None,
+        **kwargs: Any,
         ) -> list:
+        if startswith and isinstance(startswith, str):
+            startswith = [startswith]
         if endswith and isinstance(endswith, str):
             endswith = [endswith]
         links = list()
-        for a in html.find(tag):
-            for link in a.links:
+        for e in html.find(selector, **kwargs):
+            for link in e.links:
+                if startswith and not any(link.startswith(x) for x in startswith):
+                    continue
                 if endswith and not any(link.endswith(x) for x in endswith):
                     continue
                 try:
-                    links.append(TAG_LINK(text=a.text, link=URL(link)))
+                    links.append(TAG_LINK(text=e.text, link=URL(link)))
                 except:
                     pass
 
