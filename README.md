@@ -140,3 +140,7 @@ Out[4]: LogConfig(sink=None, level=DEBUG, format=<green>{time}</green> <level>{m
 
 In [5]:
 ```
+
+## TODO
+
+ - Rotating Requests through a pool of Proxies and change IPAddress.
