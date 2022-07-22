@@ -97,6 +97,7 @@ class Scraper(object):
                 timeout: int=0,
                 sleep: int=0,
                 max_count: int=0,
+                **kwargs: Any,
             ):
             self.timeout = timeout or self.timeout
             self.sleep = sleep or self.sleep
@@ -107,7 +108,7 @@ class Scraper(object):
                 self.session = AsyncHTMLSession()
                 self.session.headers.update(self.headers)
                 logger.debug(f'URL: {url}')
-                self.response = await self.session.get(url)
+                self.response = await self.session.get(url, **kwargs)
                 logger.debug(f'response status_code: {self.response.status_code}')
                 self.response.html.arender(timeout=self.timeout,
                                           sleep=self.sleep)
@@ -120,6 +121,7 @@ class Scraper(object):
                 timeout: int=0,
                 sleep: int=0,
                 max_count: int=0,
+                **kwargs: Any,
             ):
             self.timeout = timeout or self.timeout
             self.sleep = sleep or self.sleep
@@ -130,7 +132,7 @@ class Scraper(object):
                 self.session = HTMLSession()
                 self.session.headers.update(self.headers)
                 logger.debug(f'URL: {url}')
-                self.response = self.session.get(url)
+                self.response = self.session.get(url, **kwargs)
                 logger.debug(f'response status_code: {self.response.status_code}')
                 self.response.html.render(timeout=self.timeout,
                                           sleep=self.sleep)
