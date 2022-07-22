@@ -197,6 +197,7 @@ In [5]:
 
   **CAUTION**
   f you use a free proxy to login to something or enter personal information and POST it, you must be assured that it will be leaked.
+  Keep in mind, it is like writing your credit card number and security code on a postcard.
 
 
 ## KNOWN PROBLEM
