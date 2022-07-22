@@ -195,6 +195,10 @@ In [5]:
        - [torpy](https://github.com/torpyorg/torpy)
        - and/or others...
 
+  **CAUTION**
+  f you use a free proxy to login to something or enter personal information and POST it, you must be assured that it will be leaked.
+
+
 ## KNOWN PROBLEM
 if you want to use this module(and/or requests_html, selenium) on ubuntu of VPN,you should try follows commands.
 
