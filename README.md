@@ -3,6 +3,11 @@
 
 ### class URL
 
+ - validator()
+ - unquote() / decode()
+ - enquote() / encode()
+
+
 ```python
 In [1]: from scraper_tools import URL
 
@@ -32,45 +37,74 @@ Out[7]:
  'path': '/sample',
  'params': '',
  'query': 'src=git&encode=jp',
- 'fragment': ''}
+ 'fragment': '',
+ 'basename': 'sample'}
 
-In [8]: url.query
-Out[8]: 'src=git&encode=jp'
+In [8]: url = URL('http://www.example.com/データ.txt')
 
-In [9]: url.get_query_val('src')
-Out[9]: 'git'
+In [9]: url.attrs
+Out[9]:
+{'url': 'http://www.example.com/%E3%83%87%E3%83%BC%E3%82%BF.txt',
+ 'is_valid': True,
+ 'scheme': 'http',
+ 'netloc': 'www.example.com',
+ 'username': None,
+ 'password': None,
+ 'hostname': 'www.example.com',
+ 'port': None,
+ 'path': '/%E3%83%87%E3%83%BC%E3%82%BF.txt',
+ 'params': '',
+ 'query': '',
+ 'fragment': '',
+ 'basename': 'データ.txt'}
 
-In [10]: url.set_query_val('src', 'csv')
-Out[10]: 'http://www.example.com/sample?src=csv&encode=jp'
+In [10]: url.query
+Out[10]: 'src=git&encode=jp'
 
-In [11]: url
-Out[11]: http://www.example.com/sample?src=git&encode=jp
+In [11]: url.get_query_val('src')
+Out[11]: 'git'
 
-In [12]: url.set_query_val('src', 'csv',update=True)
+In [12]: url.set_query_val('src', 'csv')
 Out[12]: 'http://www.example.com/sample?src=csv&encode=jp'
 
 In [13]: url
-Out[13]: http://www.example.com/sample?src=csv&encode=jp
+Out[13]: http://www.example.com/sample?src=git&encode=jp
 
-In [14]: url.get_root_address()
-Out[14]: 'http://www.example.com'
+In [14]: url.set_query_val('src', 'csv',update=True)
+Out[14]: 'http://www.example.com/sample?src=csv&encode=jp'
 
-In [15]: url.strip_query()
-Out[15]: 'http://www.example.com/sample'
+In [15]: url
+Out[15]: http://www.example.com/sample?src=csv&encode=jp
 
-In [16]: url = URL('https://ja.wikipedia.org/wiki/日本語')
+In [16]: url.get_root_address()
+Out[16]: 'http://www.example.com'
 
-In [17]: url
-Out[17]: https://ja.wikipedia.org/wiki/%E6%97%A5%E6%9C%AC%E8%AA%9E
+In [17]: url.strip_query()
+Out[17]: 'http://www.example.com/sample'
 
-In [18]: url.unquote()
-Out[18]: 'https://ja.wikipedia.org/wiki/日本語'
+In [18]: url = URL('https://ja.wikipedia.org/wiki/日本語')
+
+In [19]: url
+Out[19]: https://ja.wikipedia.org/wiki/%E6%97%A5%E6%9C%AC%E8%AA%9E
+
+In [20]: url.unquote()
+Out[20]: 'https://ja.wikipedia.org/wiki/日本語'
+
+In [21]: url.decode()
+Out[21]: 'https://ja.wikipedia.org/wiki/日本語'
 
 ```
 
 ### class Scraper
 
-#### get_random_user_agent()
+ -  get_random_user_agent()
+ -  get_random_ipv4()
+ -  get_random_ipv6()
+ -  request()
+ -  request_async()
+ -  get_filename()
+ -  get_links()
+ -  download_file()
 
 ```python
 n [1]: from scraper_tools import Scraper
@@ -98,7 +132,19 @@ Out[8]: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, li
 In [9]: sc.get_random_user_agent()
 Out[9]: 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1'
 
-In [10]:
+In [10]: sc.get_random_ipv4()
+Out[10]: '121.162.233.190'
+
+In [11]: sc.get_random_ipv4()
+Out[11]: '178.172.98.169'
+
+In [12]: sc.get_random_ipv6()
+Out[12]: '3d18:cb77:5387:3ee9:1e60:d5f3:d987:283a'
+
+In [13]: sc.get_random_ipv6()
+Out[13]: 'cfc1:a00d:9013:37a0:ed94:5e92:7fe7:e356'
+
+In [14]:
 ```
 
 
@@ -144,3 +190,7 @@ In [5]:
 ## TODO
 
  - Rotating Requests through a pool of Proxies and change IPAddress.
+   if you want to access with hide your ipaddress, you should try follows.
+       - Using VPN service.
+       - [torpy](https://github.com/torpyorg/torpy)
+       - and/or others...

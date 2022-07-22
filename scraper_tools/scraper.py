@@ -2,7 +2,7 @@ import random
 import numpy as np
 import pandas as pd
 import requests
-from requests_html import HTMLSession, HTML
+from requests_html import HTMLSession, AsyncHTMLSession, HTML
 from typing import Any, Optional, Union, NamedTuple
 from pathlib import Path
 from .logging import logger, LogConfig
@@ -91,6 +91,29 @@ class Scraper(object):
         return ipaddress.IPv6Address._string_from_ip_int(
             random.randint(0, MAX_IPV6)
         )
+
+    async def request_async(self,
+                url: URL,
+                timeout: int=0,
+                sleep: int=0,
+                max_count: int=0,
+            ):
+            self.timeout = timeout or self.timeout
+            self.sleep = sleep or self.sleep
+            self.max_count = max_count or self.max_count
+            self.url = url
+
+            try:
+                self.session = AsyncHTMLSession()
+                self.session.headers.update(self.headers)
+                logger.debug(f'URL: {url}')
+                self.response = await self.session.get(url)
+                logger.debug(f'response status_code: {self.response.status_code}')
+                self.response.html.arender(timeout=self.timeout,
+                                          sleep=self.sleep)
+                return self.response
+            except requests.exceptions.RequestException as e:
+                self.logger.exception("request failed")
 
     def request(self,
                 url: URL,
