@@ -187,7 +187,7 @@ class Scraper(object):
         links = list()
         for e in html.find(selector, **kwargs):
             for link in e.links:
-                utl = URL(link)
+                url = URL(link)
                 if startswith and not any(url.basename.startswith(x) for x in startswith):
                     continue
                 if endswith and not any(url.basename.endswith(x) for x in endswith):
