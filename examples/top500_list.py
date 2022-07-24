@@ -10,6 +10,7 @@ top500  = [ x.text.split('\n')
 top500[0] = ['Rank', 'System', 'Onwer', 'Country',
              'Cores', 'Rmax (PFlop/s)', 'Rpeak (PFlop/s)', 'Power (kW)']
 
-df = pd.DataFrame(top500[1:], columns=top500[0][1:])
-df.to_csv('top500_list.csv')
+df = pd.DataFrame(top500[1:], columns=top500[0])
+df.set_index('Rank', inplace=True)
+# df.to_csv('top500_list.csv')
 
