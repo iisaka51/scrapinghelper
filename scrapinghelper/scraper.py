@@ -9,6 +9,7 @@ import requests
 from requests_html import HTMLSession, AsyncHTMLSession, HTML
 from .logging import logger, LogConfig
 from .url import URL
+import snoop
 
 class WebScraperException(BaseException):
     pass
@@ -178,8 +179,6 @@ class Scraper(object):
         html: HTML,
         selector: Union[list, str]=['table', 'tr'],
         split: str='\n',
-        index: int=0,
-        headers: Optional[List[str]]=None,
         **kwargs: Any,
         )->list:
         """get text from specified selector of HTML object.
@@ -208,6 +207,7 @@ class Scraper(object):
         return contents
 
 
+    @snoop
     def get_links(self,
         html: HTML,
         selector: str='a',
@@ -245,7 +245,7 @@ class Scraper(object):
         if endswith and isinstance(endswith, str):
             endswith = [endswith]
         if containing and isinstance(containing, str):
-            endswith = [endswith]
+            containing = [containing]
         links = list()
         for e in html.find(selector, **kwargs):
             for link in e.links:
@@ -254,7 +254,7 @@ class Scraper(object):
                     continue
                 if endswith and not any(url.basename.endswith(x) for x in endswith):
                     continue
-                if containing and not any(x in url.basename for x in containing):
+                if containing and not any(x in url.decode() for x in containing):
                     continue
                 try:
                     links.append(TAG_LINK(text=e.text, link=URL(link)))
