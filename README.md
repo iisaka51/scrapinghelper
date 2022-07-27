@@ -9,7 +9,7 @@
 
 
 ```python
-In [1]: from scraper_tools import URL
+In [1]: from scrapinghelper import URL
 
 In [2]: u = URL()
 
@@ -107,7 +107,7 @@ Out[21]: 'https://ja.wikipedia.org/wiki/日本語'
  -  download_file()
 
 ```python
-n [1]: from scraper_tools import Scraper
+n [1]: from scrapinghelper import Scraper
 
 In [2]: sc = Scraper()
 
@@ -151,7 +151,7 @@ the request headers with user agents will be automatically created.
 
 ```python
 In [1]: # %load examples/check_headers.py
-   ...: import scraper_tools as sct
+   ...: import scrapinghelper as sct
    ...: from pprint import pprint
    ...:
    ...: scraper = sct.Scraper()
@@ -173,7 +173,7 @@ In [2]:
 
 
 ```python
-In [2]: from scraper_tools import URL, Scraper, LogConfig
+In [2]: from scrapinghelper import URL, Scraper, LogConfig
    ...:
    ...: logconfig = LogConfig()
    ...: logconfig.level = 'INFO'
@@ -188,7 +188,7 @@ In [2]: from scraper_tools import URL, Scraper, LogConfig
    ...:
 code: 200
 
-In [3]: from scraper_tools import Scraper, LogConfig
+In [3]: from scrapinghelper import Scraper, LogConfig
    ...:
    ...: logconfig = LogConfig()
    ...: logconfig.level = 'DEBUG'

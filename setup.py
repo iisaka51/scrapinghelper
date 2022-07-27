@@ -25,13 +25,13 @@ requirements = [
 ]
 
 setup(
-    name="scraper-tools",
-    version=get_version('scraper_tools/versions.py'),
+    name="scrapinghelper",
+    version=get_version('scrapinghelper/versions.py'),
     license="MIT",
     install_requirements=requirements,
     author="Goichi (Iisaka) Yukawa",
     author_email="iisaka51@gmail.com",
-    url="https://github.com/iisaka51/scraper-tools",
+    url="https://github.com/iisaka51/scrapinghelper",
     description=SHORT_DESCRIPTION,
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
