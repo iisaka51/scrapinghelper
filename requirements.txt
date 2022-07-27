@@ -1,1 +1,6 @@
 request_html
+requests
+types-requests
+loguru
+numpy
+pandas

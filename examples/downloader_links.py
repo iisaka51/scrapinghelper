@@ -1,6 +1,6 @@
 import pandas as pd
 from requests_html import HTMLSession
-import scraper_tools as sct
+import scrapinghelper as sch
 
 _BASE_URL='https://www.forexpnf.info/forex-indicators'
 _DOWNLOAD_URL = (
@@ -8,10 +8,10 @@ _DOWNLOAD_URL = (
     'free-forex-indicators-a-j/'
 )
 
-logconfig = sct.LogConfig()
+logconfig = sch.LogConfig()
 logconfig.level = 'INFO'
 
-scraper = sct.Scraper(logconfig=logconfig)
+scraper = sch.Scraper(logconfig=logconfig)
 response  = scraper.request(_DOWNLOAD_URL)
 
 files = list()

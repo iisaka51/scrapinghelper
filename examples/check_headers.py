@@ -1,6 +1,6 @@
-import scraper_tools as sct
+import scrapinghelper as sch
 from pprint import pprint
 
-scraper = sct.Scraper()
+scraper = sch.Scraper()
 response = scraper.request('http://httpbin.org/headers')
 pprint(response.json())

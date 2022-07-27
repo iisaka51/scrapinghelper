@@ -1,5 +1,5 @@
 import pandas as pd
-from scraper_tools import Scraper, URL
+from scrapinghelper import Scraper, URL
 
 url = 'https://www.top500.org/lists/top500/2022/06/'
 

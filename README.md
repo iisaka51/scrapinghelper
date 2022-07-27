@@ -1,3 +1,4 @@
+# ScrapingHelper
 
 ## How to use
 
@@ -151,10 +152,10 @@ the request headers with user agents will be automatically created.
 
 ```python
 In [1]: # %load examples/check_headers.py
-   ...: import scrapinghelper as sct
+   ...: import scrapinghelper as sch
    ...: from pprint import pprint
    ...:
-   ...: scraper = sct.Scraper()
+   ...: scraper = sch.Scraper()
    ...: response = scraper.request('http://httpbin.org/headers')
    ...:
    ...: pprint(response.json())
