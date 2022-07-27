@@ -9,7 +9,6 @@ import requests
 from requests_html import HTMLSession, AsyncHTMLSession, HTML
 from .logging import logger, LogConfig
 from .url import URL
-import snoop
 
 class WebScraperException(BaseException):
     pass
@@ -207,7 +206,6 @@ class Scraper(object):
         return contents
 
 
-    @snoop
     def get_links(self,
         html: HTML,
         selector: str='a',
