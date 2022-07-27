@@ -1,9 +1,8 @@
 import pandas as pd
-import scrapinghelper as sch
+from scrapinghelper import Scraper, LogConfig
 
-logconfig = sch.LogConfig()
-scraper = sch.Scraper(logconfig=logconfig)
-response  = scraper.request(URL)
+logconfig = LogConfig()
+scraper = Scraper(logconfig=logconfig)
 
 df = pd.read_csv('indicators.csv')
 

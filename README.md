@@ -105,6 +105,7 @@ Out[21]: 'https://ja.wikipedia.org/wiki/日本語'
  -  request_async()
  -  get_filename()
  -  get_links()
+ -  get_texts()
  -  download_file()
 
 ```python

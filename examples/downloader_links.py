@@ -1,6 +1,6 @@
 import pandas as pd
 from requests_html import HTMLSession
-import scrapinghelper as sch
+from scrapinghelper import Scraper, LogConfig
 
 _BASE_URL='https://www.forexpnf.info/forex-indicators'
 _DOWNLOAD_URL = (
@@ -8,14 +8,15 @@ _DOWNLOAD_URL = (
     'free-forex-indicators-a-j/'
 )
 
-logconfig = sch.LogConfig()
+logconfig = LogConfig()
 logconfig.level = 'INFO'
 
-scraper = sch.Scraper(logconfig=logconfig)
+scraper = Scraper(logconfig=logconfig)
 response  = scraper.request(_DOWNLOAD_URL)
 
 files = list()
-for atag in s.get_links(response.html, endswith=['.mq4', '.mq5']):
+for atag in scraper.get_links(response.html,
+                              endswith=['.mq4', '.mq5']):
     if atag.link:
         if atag.text:
             filename = atag.text

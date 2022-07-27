@@ -1,5 +1,5 @@
 import pandas as pd
-from scrapinghelper import Scraper, URL
+from scrapinghelper import Scraper
 
 url = 'https://www.socks-proxy.net/'
 
