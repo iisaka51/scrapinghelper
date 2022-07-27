@@ -1,15 +1,14 @@
-import random
+import time
+import ipaddress
+from pathlib import Path
+from typing import Any, Optional, Union, List, NamedTuple
+#
 import numpy as np
 import pandas as pd
 import requests
 from requests_html import HTMLSession, AsyncHTMLSession, HTML
-from typing import Any, Optional, Union, NamedTuple
-from pathlib import Path
 from .logging import logger, LogConfig
 from .url import URL
-import ipaddress
-import random
-import time
 
 class WebScraperException(BaseException):
     pass
@@ -29,6 +28,7 @@ class Scraper(object):
                  sleep: int=10,
                  max_count: int= 5,
                  max_user_agents: int=10,
+                 headers: Optional[dict]=None,
                  logconfig: Optional[LogConfig]=None,
         ):
         """
@@ -40,6 +40,8 @@ class Scraper(object):
             if provided, of how many long to sleep after initial render.
         max_user_agents: int
             The number of user_agents to keep in memory. default is 10.
+        headers: dict
+            request headers. default is automaticaly generated.
         logconfig: LogConfig
             if provided, configure for loguru.
 
@@ -54,9 +56,19 @@ class Scraper(object):
         self.df = pd.DataFrame()
         self.user_agents = pd.DataFrame()
         self.max_user_agents = max_user_agents
-        self.headers = {"User-Agent": self.get_random_user_agent() }
         self.session = None
         self.response = None
+        self.headers = headers or {
+                "Accept": (
+                    "text/html,application/xhtml+xml,"
+                    "application/xml;q=0.9,"
+                    "image/webp,image/apng,*/*;q=0.8,"
+                    "application/signed-exchange;v=b3;q=0.9"),
+                "Accept-Encoding": "gzip, deflate, br",
+                "Accept-Language": "en",
+                "Upgrade-Insecure-Requests": "1",
+                "User-Agent": self.get_random_user_agent(),
+            }
 
         if logconfig:
             logger.remove()
@@ -68,7 +80,7 @@ class Scraper(object):
     def get_random_user_agent(self) ->str:
         if self.user_agents.empty:
             data_file  = Path(__file__).parent / 'data/user_agents.csv'
-            skip=random.randint(1,int(self.__user_agent_count/2))
+            skip=np.random.randint(1,int(self.__user_agent_count/2))
             if ( skip + self.max_user_agents ) >= self.__user_agent_count:
                 skip = 0
             self.user_agents = pd.read_csv(data_file,
@@ -83,13 +95,13 @@ class Scraper(object):
     def get_random_ipv4(self) ->str:
         MAX_IPV4 = ipaddress.IPv4Address._ALL_ONES  # 2 ** 32 - 1
         return  ipaddress.IPv4Address._string_from_ip_int(
-            random.randint(0, MAX_IPV4)
+            np.random.randint(0, MAX_IPV4)
         )
 
     def get_random_ipv6(self) ->str:
         MAX_IPV6 = ipaddress.IPv6Address._ALL_ONES  # 2 ** 128 - 1
         return ipaddress.IPv6Address._string_from_ip_int(
-            random.randint(0, MAX_IPV6)
+            np.random.randint(0, MAX_IPV6)
         )
 
     async def request_async(self,
@@ -97,48 +109,61 @@ class Scraper(object):
                 timeout: int=0,
                 sleep: int=0,
                 max_count: int=0,
+                user_agent: Optional[str]=None,
                 **kwargs: Any,
-            ):
-            self.timeout = timeout or self.timeout
-            self.sleep = sleep or self.sleep
-            self.max_count = max_count or self.max_count
-            self.url = url
+        ):
+        self.timeout = timeout or self.timeout
+        self.sleep = sleep or self.sleep
+        self.max_count = max_count or self.max_count
+        self.url = url
 
-            try:
-                self.session = AsyncHTMLSession()
-                self.session.headers.update(self.headers)
-                logger.debug(f'URL: {url}')
-                self.response = await self.session.get(url, **kwargs)
-                logger.debug(f'response status_code: {self.response.status_code}')
-                self.response.html.arender(timeout=self.timeout,
-                                          sleep=self.sleep)
-                return self.response
-            except requests.exceptions.RequestException as e:
-                self.logger.exception("request failed")
+        if not user_agent:
+            headers = self.headers
+        elif user_agent == 'random':
+            headers = {'User-Agent': self.get_random_user_agent() }
+        try:
+            self.session = AsyncHTMLSession()
+            self.session.headers.update(self.headers)
+            logger.debug(f'URL: {url}')
+            self.response = await self.session.get(url, **kwargs)
+            logger.debug(f'response status_code: {self.response.status_code}')
+            self.response.html.arender(
+                timeout=self.timeout,
+                sleep=random.randint(2,self.sleep))
+            return self.response
+        except requests.exceptions.RequestException as e:
+            self.logger.exception("request failed")
 
     def request(self,
                 url: URL,
                 timeout: int=0,
                 sleep: int=0,
                 max_count: int=0,
+                user_agent: Optional[str]=None,
                 **kwargs: Any,
-            ):
-            self.timeout = timeout or self.timeout
-            self.sleep = sleep or self.sleep
-            self.max_count = max_count or self.max_count
-            self.url = url
+        ):
+        self.timeout = timeout or self.timeout
+        self.sleep = sleep or self.sleep
+        self.max_count = max_count or self.max_count
+        self.url = url
 
-            try:
-                self.session = HTMLSession()
-                self.session.headers.update(self.headers)
-                logger.debug(f'URL: {url}')
-                self.response = self.session.get(url, **kwargs)
-                logger.debug(f'response status_code: {self.response.status_code}')
-                self.response.html.render(timeout=self.timeout,
-                                          sleep=self.sleep)
-                return self.response
-            except requests.exceptions.RequestException as e:
-                self.logger.exception("request failed")
+        if not user_agent:
+            headers = self.headers
+        elif user_agent == 'random':
+            headers = {'User-Agent': self.get_random_user_agent() }
+
+        try:
+            self.session = HTMLSession()
+            self.session.headers.update(self.headers)
+            logger.debug(f'URL: {url}')
+            self.response = self.session.get(url, **kwargs)
+            logger.debug(f'response status_code: {self.response.status_code}')
+            self.response.html.render(
+                timeout=self.timeout,
+                sleep=np.random.randint(2,self.sleep))
+            return self.response
+        except requests.exceptions.RequestException as e:
+            self.logger.exception("request failed")
 
     def ommit_char(self,
         values: str,
@@ -148,6 +173,40 @@ class Scraper(object):
             for n in range(len(values)):
                 values[n] = values[n].replace(*omit_map)
             return values
+
+    def get_texts(self,
+        html: HTML,
+        selector: Union[list, str]=['table', 'tr'],
+        split: str='\n',
+        index: int=0,
+        headers: Optional[List[str]]=None,
+        **kwargs: Any,
+        )->list:
+        """get text from specified selector of HTML object.
+        Parameters
+        ----------
+        html: HTML
+            HTML object of requests_html
+        selector: str
+            CSS Selector or tag. default is ['table','tr']
+        Returns
+        ------
+        list of result: str
+        """
+
+        if isinstance(selector, str):
+            selector = [selector]
+
+        elements = html.find(selector[0], **kwargs)
+        for select in selector[-1:]:
+            elements = elements[0].find(select, **kwargs)
+
+        if hasattr(elements, '__iter__'):
+            contents = [ x.text.split(split) for x in elements ]
+        else:
+            contents = [ elements.text.split(split) ]
+        return contents
+
 
     def get_links(self,
         html: HTML,
@@ -163,7 +222,7 @@ class Scraper(object):
         html: HTML
             HTML object of requests_html
         selector: str
-            CSS Selector or tag
+            CSS Selector or tag. default is 'a'
         startswith: Optional[Union[list,str]] = None
             if startswith passed, return only startswith for basename of url.
             i.e.: link is 'http://example.com/example/sample.txt'
@@ -176,6 +235,9 @@ class Scraper(object):
             if containing passed, return only word contain in path of url.
             i.e.: link is 'http://example.com/example/sample.txt'
                   return this link when passed containing('example').
+        Returns
+        ------
+        list of result: str
         """
 
         if startswith and isinstance(startswith, str):

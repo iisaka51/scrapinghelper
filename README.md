@@ -147,6 +147,30 @@ Out[13]: 'cfc1:a00d:9013:37a0:ed94:5e92:7fe7:e356'
 In [14]:
 ```
 
+the request headers with user agents will be automatically created.
+
+```python
+In [1]: # %load examples/check_headers.py
+   ...: import scraper_tools as sct
+   ...: from pprint import pprint
+   ...:
+   ...: scraper = sct.Scraper()
+   ...: response = scraper.request('http://httpbin.org/headers')
+   ...:
+   ...: pprint(response.json())
+{'headers': {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+             'Accept-Encoding': 'gzip, deflate, br',
+             'Accept-Language': 'en',
+             'Host': 'httpbin.org',
+             'Upgrade-Insecure-Requests': '1',
+             'User-Agent': 'Mozilla/5.0 (iPad; CPU OS 8_1_2 like Mac OS X) '
+                           'AppleWebKit/600.1.4 (KHTML, like Gecko) '
+                           'Mobile/12B440',
+             'X-Amzn-Trace-Id': 'Root=1-62de3626-07daf491262b96356486884d'}}
+
+In [2]:
+```
+
 
 ```python
 In [2]: from scraper_tools import URL, Scraper, LogConfig
@@ -196,7 +220,7 @@ In [5]:
        - and/or others...
 
   **CAUTION**
-  f you use a free proxy to login to something or enter personal information and POST it, you must be assured that it will be leaked.
+  if you use a free proxy to login to something or enter personal information and POST it, you must be assured that it will be leaked.
   Keep in mind, it is like writing your credit card number and security code on a postcard.
 
 
