@@ -132,7 +132,7 @@ class Scraper(object):
                 sleep=random.randint(2,self.sleep))
             return self.response
         except requests.exceptions.RequestException as e:
-            self.logger.exception("request failed")
+            logger.exception("request failed")
 
     def request(self,
                 url: URL,
@@ -163,7 +163,7 @@ class Scraper(object):
                 sleep=np.random.randint(2,self.sleep))
             return self.response
         except requests.exceptions.RequestException as e:
-            self.logger.exception("request failed")
+            logger.exception("request failed")
 
     def ommit_char(self,
         values: str,
