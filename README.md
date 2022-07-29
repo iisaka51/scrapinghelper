@@ -213,6 +213,38 @@ Out[4]: LogConfig(sink=None, level=DEBUG, format=<green>{time}</green> <level>{m
 In [5]:
 ```
 
+## render() and PROXY
+if passed `render=False`, `request()` skip call `render()`.
+`render()` of requests-html does not work with proxy.
+scrapinghelper support `render()` with proxy.
+
+```
+In [2]: # %load check_ipaddress.py
+   ...: from scrapinghelper import Scraper, URL
+   ...:
+   ...: # tiny socks5 proxy
+   ...: proxies = {
+   ...:         'http':'socks5:/127.0.0.1:9050',
+   ...:         'https':'socks5://127.0.0.1:9050'
+   ...:         }
+   ...: url = 'https://httpbin.org/ip'
+   ...:
+   ...: scraper = Scraper()
+   ...: response = scraper.request(url)
+   ...: print(response.html.text)
+   ...: response = scraper.request(url,proxies=proxies)
+   ...: print(response.html.text)
+   ...: response = scraper.request(url,proxies=proxies, render=False)
+   ...: print(response.html.text)
+   ...:
+{ "origin": "221.186.103.38" }
+{ "origin": "185.195.71.3" }
+{ "origin": "185.195.71.3" }
+
+In [3]:
+```
+
+
 ## TODO
 
  - Rotating Requests through a pool of Proxies and change IPAddress.

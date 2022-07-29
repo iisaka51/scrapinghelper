@@ -28,11 +28,10 @@ class HTMLSession(requests_html.HTMLSession):
     param_proxy_server = ''
 
     @classmethod
-    def set_proxy_server(self, proxies: dict)->None:
+    def set_proxy_server(cls, proxies: dict)->None:
         if 'https' in proxies:
-            # self.proxy_server = URL(proxies['https']).netloc
-            self.proxy_server = proxies['https']
-            self.param_proxy_server = f"--proxy-server={self.proxy_server}"
+            cls.proxy_server = proxies['https']
+            cls.param_proxy_server = f"--proxy-server={cls.proxy_server}"
 
     @property
     def browser(self):
@@ -83,6 +82,7 @@ class Scraper(object):
         self.max_user_agents = max_user_agents
         self.session = None
         self.response = None
+        self.proxies = {}
         self.headers = headers or {
                 "Accept": (
                     "text/html,application/xhtml+xml,"
@@ -149,7 +149,7 @@ class Scraper(object):
         elif user_agent == 'random':
             headers = {'User-Agent': self.get_random_user_agent() }
         try:
-            self.session = self.session or AsyncHTMLSession()
+            self.session = AsyncHTMLSession()
             self.session.headers.update(self.headers)
             logger.debug(f'URL: {url}')
             self.response = await self.session.get(url, **kwargs)
@@ -183,8 +183,11 @@ class Scraper(object):
             headers = {'User-Agent': self.get_random_user_agent() }
 
         try:
-            if proxies:
+            if proxies and proxies != self.proxies:
                 HTMLSession.set_proxy_server(proxies)
+                if self.session:
+                    self.session.close()
+                    self.session = None
             self.session = self.session or HTMLSession()
             self.session.headers.update(self.headers)
             logger.debug(f'URL: {url}')
