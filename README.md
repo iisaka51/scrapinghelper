@@ -224,7 +224,7 @@ In [2]: # %load check_ipaddress.py
    ...:
    ...: # tiny socks5 proxy
    ...: proxies = {
-   ...:         'http':'socks5:/127.0.0.1:9050',
+   ...:         'http':'socks5://127.0.0.1:9050',
    ...:         'https':'socks5://127.0.0.1:9050'
    ...:         }
    ...: url = 'https://httpbin.org/ip'
@@ -244,6 +244,27 @@ In [2]: # %load check_ipaddress.py
 In [3]:
 ```
 
+## PROXY
+
+```
+In [2]: # %load examples/get_proxy.py
+   ...: from scrapinghelper import ProxyManager
+   ...:
+   ...: p = ProxyManager()
+   ...: print(p.proxies[:2])
+   ...:
+   ...: print(p.next_proxy())
+   ...: print(p.next_proxy())
+   ...: print(p.get_random_proxy())
+   ...:
+   ...:
+[{'http': socks5://85.221.247.236:8080, 'https': socks5://85.221.247.236:8080}, {'http': socks5://109.201.9.100:8080, 'https': socks5://109.201.9.100:8080}]
+{'http': socks5://85.221.247.236:8080, 'https': socks5://85.221.247.236:8080}
+{'http': socks5://109.201.9.100:8080, 'https': socks5://109.201.9.100:8080}
+{'http': socks5://1.224.3.122:3888, 'https': socks5://1.224.3.122:3888}
+
+In [3]:
+```
 
 ## TODO
 
