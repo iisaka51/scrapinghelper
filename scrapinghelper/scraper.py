@@ -1,12 +1,15 @@
+import asyncio
 import time
 import ipaddress
+import pyppeteer
 from pathlib import Path
 from typing import Any, Optional, Union, List, NamedTuple
 #
 import numpy as np
 import pandas as pd
 import requests
-from requests_html import HTMLSession, AsyncHTMLSession, HTML
+from requests_html import AsyncHTMLSession, HTML
+import requests_html
 from .logging import logger, LogConfig
 from .url import URL
 
@@ -19,6 +22,28 @@ class WebScraperCantFind(WebScraperException):
 class TAG_LINK(NamedTuple):
     text: str
     link: Union[URL,str]
+
+class HTMLSession(requests_html.HTMLSession):
+    proxy_server = None
+    param_proxy_server = ''
+
+    @classmethod
+    def set_proxy_server(self, proxies: dict)->None:
+        if 'https' in proxies:
+            # self.proxy_server = URL(proxies['https']).netloc
+            self.proxy_server = proxies['https']
+            self.param_proxy_server = f"--proxy-server={self.proxy_server}"
+
+    @property
+    def browser(self):
+        if not hasattr(self, "_browser"):
+            self.loop = asyncio.get_event_loop()
+            self._browser = self.loop.run_until_complete(
+                pyppeteer.launch(headless=True,
+                         args=['--no-sandbox',
+                               '-ignore-certificate-errors',
+                               f'{self.param_proxy_server}' ]))
+        return self._browser
 
 class Scraper(object):
     __user_agent_count=10000
@@ -110,6 +135,8 @@ class Scraper(object):
                 sleep: int=0,
                 max_count: int=0,
                 user_agent: Optional[str]=None,
+                proxies: dict={},
+                render=True,
                 **kwargs: Any,
         ):
         self.timeout = timeout or self.timeout
@@ -122,14 +149,15 @@ class Scraper(object):
         elif user_agent == 'random':
             headers = {'User-Agent': self.get_random_user_agent() }
         try:
-            self.session = AsyncHTMLSession()
+            self.session = self.session or AsyncHTMLSession()
             self.session.headers.update(self.headers)
             logger.debug(f'URL: {url}')
             self.response = await self.session.get(url, **kwargs)
             logger.debug(f'response status_code: {self.response.status_code}')
-            self.response.html.arender(
-                timeout=self.timeout,
-                sleep=random.randint(2,self.sleep))
+            if render:
+                self.response.html.arender(
+                    timeout=self.timeout,
+                    sleep=random.randint(2,self.sleep))
             return self.response
         except requests.exceptions.RequestException as e:
             logger.exception("request failed")
@@ -140,6 +168,8 @@ class Scraper(object):
                 sleep: int=0,
                 max_count: int=0,
                 user_agent: Optional[str]=None,
+                proxies: dict={},
+                render=True,
                 **kwargs: Any,
         ):
         self.timeout = timeout or self.timeout
@@ -153,14 +183,17 @@ class Scraper(object):
             headers = {'User-Agent': self.get_random_user_agent() }
 
         try:
-            self.session = HTMLSession()
+            if proxies:
+                HTMLSession.set_proxy_server(proxies)
+            self.session = self.session or HTMLSession()
             self.session.headers.update(self.headers)
             logger.debug(f'URL: {url}')
-            self.response = self.session.get(url, **kwargs)
+            self.response = self.session.get(url, proxies=proxies, **kwargs)
             logger.debug(f'response status_code: {self.response.status_code}')
-            self.response.html.render(
-                timeout=self.timeout,
-                sleep=np.random.randint(2,self.sleep))
+            if render:
+                self.response.html.render(
+                    timeout=self.timeout,
+                    sleep=np.random.randint(2,self.sleep))
             return self.response
         except requests.exceptions.RequestException as e:
             logger.exception("request failed")
