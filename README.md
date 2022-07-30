@@ -246,6 +246,10 @@ In [3]:
 
 ## PROXY
 
+Get public proxies list from url.
+default is [github.com/hookzof](https://raw.githubusercontent.com/hookzof/socks5_list/master/proxy.txt).
+Please keep in mind, there proxies are ABSOLUTELY NO WARRANTY.
+
 ```
 In [2]: # %load examples/get_proxy.py
    ...: from scrapinghelper import ProxyManager
@@ -266,13 +270,20 @@ In [2]: # %load examples/get_proxy.py
 In [3]:
 ```
 
-## TODO
+you can filename as url. i.e.:
 
- - Rotating Requests through a pool of Proxies and change IPAddress.
-   if you want to access with hide your ipaddress, you should try follows.
-       - Using VPN service.
-       - [torpy](https://github.com/torpyorg/torpy)
-       - and/or others...
+```
+p = ProxyManager('file://./myproxy_list.txt')
+```
+
+there uri expand as follows.
+
+```
+        if proxies_url.startswith('file://.'):
+            proxies_url = proxies_url.replace('file://.','')
+            this_directory = Path(__file__).parent
+            proxies_url = f'file://{str(this_directory / proxies_url )}'
+```
 
   **CAUTION**
   if you use a free proxy to login to something or enter personal information and POST it, you must be assured that it will be leaked.

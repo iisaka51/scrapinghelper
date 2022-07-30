@@ -1,8 +1,8 @@
 import sys
 
-sys.path.insert(0,"../scraper-tools")
+sys.path.insert(0,"../scrapinghelper")
 
-from scraper_tools.url import URL, remove_urls, replace_urls
+from scrapinghelper import URL, remove_urls, replace_urls
 from pprint import pprint
 
 test_data = [
@@ -22,7 +22,7 @@ test_data = [
                 'params': '',
                 'query': '',
                 'fragment': 'csv-unicode',
-                'basename': None,
+                'basename': '',
              }
         },
         {
@@ -136,7 +136,7 @@ test_data = [
                 'params': '',
                 'query': '',
                 'fragment': '',
-                'basename': None,
+                'basename': '',
             }
         },
     ]

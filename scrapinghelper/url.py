@@ -7,10 +7,10 @@ from urllib.parse import (
  )
 from typing import Any, Optional, Tuple, Union, NamedTuple
 
-ip_middle_octet = r"(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5]))"
-ip_last_octet = r"(?:\.(?:0|[1-9]\d?|1\d\d|2[0-4]\d|25[0-5]))"
+IP_MIDDLE_OCTET = r"(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5]))"
+IP_LAST_OCTET = r"(?:\.(?:0|[1-9]\d?|1\d\d|2[0-4]\d|25[0-5]))"
 
-url_pattern = ( # noqa: W605
+URL_PATTERN = ( # noqa: W605
     # protocol identifier
     r"(?:(?:https?|ftp)://)"
     # user:pass authentication
@@ -20,9 +20,9 @@ url_pattern = ( # noqa: W605
     r"(?P<private_ip>"
     # IP address exclusion
     # private & local networks
-    r"(?:(?:10|127)" + ip_middle_octet + r"{2}" + ip_last_octet + r")|"
-    r"(?:(?:169\.254|192\.168)" + ip_middle_octet + ip_last_octet + r")|"
-    r"(?:172\.(?:1[6-9]|2\d|3[0-1])" + ip_middle_octet + ip_last_octet + r"))"
+    r"(?:(?:10|127)" + IP_MIDDLE_OCTET + r"{2}" + IP_LAST_OCTET + r")|"
+    r"(?:(?:169\.254|192\.168)" + IP_MIDDLE_OCTET + IP_LAST_OCTET + r")|"
+    r"(?:172\.(?:1[6-9]|2\d|3[0-1])" + IP_MIDDLE_OCTET + IP_LAST_OCTET + r"))"
     r"|"
     # private & local hosts
     r"(?P<private_host>"
@@ -35,8 +35,8 @@ url_pattern = ( # noqa: W605
     # (first & last IP address of each class)
     r"(?P<public_ip>"
     r"(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])"
-    r"" + ip_middle_octet + r"{2}"
-    r"" + ip_last_octet + r")"
+    r"" + IP_MIDDLE_OCTET + r"{2}"
+    r"" + IP_LAST_OCTET + r")"
     r"|"
     # IPv6 RegEx from https://stackoverflow.com/a/17871737
     r"\[("
@@ -92,7 +92,7 @@ url_pattern = ( # noqa: W605
     r"(?:#\S*)?"
 )
 
-pattern = re.compile( r"^" + url_pattern + r"$", re.UNICODE | re.IGNORECASE)
+pattern = re.compile( r"^" + URL_PATTERN + r"$", re.UNICODE | re.IGNORECASE)
 
 def url_validator(value, public=False):
     """
@@ -186,7 +186,7 @@ def replace_urls(
     ----------
         This function is not perfect.
     """
-    pattern = re.compile( url_pattern + end_with, re.UNICODE | re.IGNORECASE)
+    pattern = re.compile( URL_PATTERN + end_with, re.UNICODE | re.IGNORECASE)
     matches = list(re.finditer(pattern, text))
     matches.reverse()
     for match in matches:
@@ -264,7 +264,7 @@ class URL(object):
 
         Examples
         --------
-        >>> from scrapper_tools import URL
+        >>> from scrapinghelper import URL
         >>> url = URL()
         >>> url.validator('http://example.com')
         True
