@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 
 class UserAgent(object):
-    __user_agent_count=20000
     __user_agents_datafile = '20000 User Agents.csv'
     __columns = "id,user_agent"
 
@@ -35,10 +34,11 @@ class UserAgent(object):
         with open(data_file) as file:
             user_agents = file.read().splitlines()
 
+        self.user_agent_count = len(user_agents)
         df = pd.DataFrame( data=user_agents, columns=['user_agent'] )
         df = df[~df.user_agent.isin(self.__known_bad_user_agents)]
         if keep_user_agents:
-            chosen_index = np.random.choice(self.__user_agent_count,
+            chosen_index = np.random.choice(self.user_agent_count,
                                      size=keep_user_agents, replace = True)
             self.user_agents = df.iloc[chosen_index]
         else:

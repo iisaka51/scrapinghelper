@@ -2,6 +2,7 @@ import sys
 
 sys.path.insert(0,"../scrapinghelper")
 
+from pathlib import Path
 from scrapinghelper import UserAgent
 from pprint import pprint
 
@@ -25,3 +26,11 @@ class TestClass:
         u = UserAgent(keep_user_agents=0)
         assert u.keep_user_agents == 19999
         assert len(u.user_agents) == 19999
+
+    def test_load_user_agent_from_file(self):
+        this_directory = Path(__file__).parent
+        datapath = this_directory / "user_agent_test.csv"
+
+        u = UserAgent(datapath=datapath)
+        assert u.keep_user_agents == 50
+        assert len(u.user_agents) == 50
