@@ -108,6 +108,7 @@ Out[21]: 'https://ja.wikipedia.org/wiki/日本語'
  -  get_texts()
  -  download_file()
 
+
 ```python
 n [1]: from scrapinghelper import Scraper
 
@@ -171,6 +172,24 @@ In [1]: # %load examples/check_headers.py
              'X-Amzn-Trace-Id': 'Root=1-62de3626-07daf491262b96356486884d'}}
 
 In [2]:
+```
+
+**[Important note regardings trie]
+
+the datasets of UserAgents from [51Degrees/DeviceDetection](https://github.com/51Degrees/device-detection-data).
+data file '20000 User Agents.csv' is licenced under the European Union Public Licence V.1.2.
+
+```python
+from scrapinghelper import Scraper
+
+scrapper = Scraper(datapath="path_to_new_user_agent_csvfile")
+  # ...
+```
+
+or set shell Environmnet "SCRAPINGHELPER_USERAGENT_PATH".
+
+```bash
+export SCRAPINGHELPER_USERAGENT_PATH="/path/to/new_user_agent_csvfile"
 ```
 
 

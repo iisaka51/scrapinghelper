@@ -1,0 +1,53 @@
+import os
+from pathlib import Path
+from typing import Optional
+import numpy as np
+import pandas as pd
+
+class UserAgent(object):
+    __user_agent_count=20000
+    __user_agents_datafile = '20000 User Agents.csv'
+    __columns = "id,user_agent"
+
+    def __init__(self,
+        keep_user_agents: int=50,
+        datapath: Optional[str]=None,
+        ):
+        """UserAgent manager
+        Parameters
+        ----------
+        keep_user_agents: int
+            The number of user_agents to keep in memory. default is 50.
+            if 0 passed for keep_user_agents, all data will be kept.
+        datapath: Optional[str]
+            The CSV filename of user_agents datasets from 51degrees.com.
+        """
+        self.__known_bad_user_agents = ['Hello, world']
+
+        datapath = datapath or os.environ.get('SCRAPINGHELPER_USERAGENT_PATH',
+                                              default=None)
+        if datapath:
+            data_file = Path(datapath)
+        else:
+            data_file  = ( Path(__file__).parent
+                            / 'data/{}'.format(self.__user_agents_datafile) )
+
+        with open(data_file) as file:
+            user_agents = file.read().splitlines()
+
+        df = pd.DataFrame( data=user_agents, columns=['user_agent'] )
+        df = df[~df.user_agent.isin(self.__known_bad_user_agents)]
+        if keep_user_agents:
+            chosen_index = np.random.choice(self.__user_agent_count,
+                                     size=keep_user_agents, replace = True)
+            self.user_agents = df.iloc[chosen_index]
+        else:
+            self.user_agents = df.copy()
+
+        self.keep_user_agents = len(self.user_agents)
+
+    def get_random_user_agent(self) ->str:
+        chosen_index = int(np.random.choice(self.keep_user_agents,
+                                          replace=True, size=1))
+        return self.user_agents.iloc[chosen_index,0]
+

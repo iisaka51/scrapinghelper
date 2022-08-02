@@ -5,6 +5,9 @@ from pathlib import Path
 from itertools import cycle
 from typing import Optional, NamedTuple
 import pandas as pd
+import snoop
+
+__DEFAULT_PUBLIC_PROXY__ = 'Hookzof'
 
 PUBLIC_PROXIES = {
     "TheSpeedX": (
@@ -20,7 +23,7 @@ IP_LAST_OCTET = r"(?:\.(?:0|[1-9]\d?|1\d\d|2[0-4]\d|25[0-5]))"
 
 PROXY_PATTERN = ( # noqa: W605
     # protocol identifier
-    r"((?P<scheme>https?|socks[45]|direct|quick)://)?"
+    r"(?:(?:(?P<scheme>https?|socks[45]|direct|quick))://)?"
     # user:pass authentication
     r"(?:[-a-z\u00a1-\uffff0-9._~%!$&'()*+,;=:]+"
     r"(?::[-a-z0-9._~%!$&'()*+,;=:]*)?@)?"
@@ -41,6 +44,7 @@ PROXY_PATTERN = ( # noqa: W605
     r"(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])"
     r"" + IP_MIDDLE_OCTET + r"{2}"
     r"" + IP_LAST_OCTET + r")"
+    r"|"
     # host name
     r"(?:(?:(?:xn--[-]{0,2})|[a-z\u00a1-\uffff\U00010000-\U0010ffff0-9]-?)*"
     r"[a-z\u00a1-\uffff\U00010000-\U0010ffff0-9]+)"
@@ -71,6 +75,7 @@ class ResultProxyValidator(NamedTuple):
     port: Optional[str]
     as_dict: dict
 
+@snoop
 def proxyparse(
         value: str,
         proxy_type='https'
@@ -94,7 +99,7 @@ def proxyparse(
     if not check:
         raise ProxyParseError('Invalid proxy string')
 
-    c = any(value.startswith(x) for x in ['http', 'socks', 'direct', 'quiC'])
+    c = any(value.startswith(x) for x in ['http', 'socks', 'direct', 'quic'])
     if not c:
          url_prefix = f'{proxy_type}://' if proxy_type else ''
          proxy_str = f'{url_prefix}{value}'
@@ -178,15 +183,18 @@ class PROXY(object):
         self.__dict__.update(self.validate.as_dict)
 
     def validator(self, proxy_str: str) -> bool:
-        """
-        Return whether or not given value is a valid URL
-        If the value is valid URL this function returns ``True``,
-        otherwise ``False``.
+        """Validator for PROXY strings.
 
         Parameters
         ----------
         proxy_str: str
-            The input proxy_str
+            The input string of proxy.
+
+        Returns
+        -------
+        Return whether or not given value is a valid PROXY.
+        If the proxy_str is valid PROXY this function returns
+        ``True``, otherwise ``False``.
 
         Examples
         --------
@@ -202,7 +210,7 @@ class PROXY(object):
         True
 
         """
-        return self.__validator(url).is_valid
+        return self.__validator(proxy_str).is_valid
 
     def __validator(self,
         proxy_str: str,
@@ -232,7 +240,8 @@ class PROXY(object):
         result = ResultProxyValidator(
                     proxy_str, _is_valid,
                     _scheme, _netloc,
-                    _username, _password, _hostname, _port, _as_dict )
+                    _username, _password,
+                    _hostname, _port, _as_dict )
 
         return result
 
@@ -241,13 +250,14 @@ class PROXY(object):
         return self.validate._asdict()
 
     def __repr__(self) -> str:
-        return str(self.proxy_str)
+        return str(self.validate.proxy_url)
 
 
 class ProxyManager(object):
     def __init__(self, proxies_url=None):
-        self.proxies_url = ( self.normalized_proxies_url(proxies_url)
-                             or PUBLIC_PROXIES['Hookzof'] )
+        self.proxies_url = (
+             self.normalized_proxies_url(proxies_url)
+             or PUBLIC_PROXIES[__DEFAULT_PUBLIC_PROXY__] )
         self.proxies = self.load_proxies(self.proxies_url)
         self.proxies_pool = cycle(self.proxies)
 
@@ -255,7 +265,19 @@ class ProxyManager(object):
     def show_proxies_source():
         return [x for x in PUBLIC_PROXIES.keys()]
 
-    def normalized_proxies_url(self, proxies_url):
+    def normalized_proxies_url(self,
+        proxies_url:str
+        ) -> Optional[str]:
+        """ normalized proxies_url.
+        Parameters
+        ----------
+        proxies_url: str
+            if proxies_url startswith 'file://.',
+            expand absolute directory for '.' which is current directory.
+        Returns
+        -------
+        normaized proxies_url:str
+        """
         if  proxies_url:
             return None
 
@@ -266,7 +288,24 @@ class ProxyManager(object):
             proxies_url = f'file://{str(this_directory / proxies_url )}'
         return proxies_url
 
-    def load_proxies(self, proxies_url=None, proxy_type='socks5'):
+    def load_proxies(self,
+        proxies_url: Optional[str]=None,
+        proxy_type: str='https') ->cycle:
+        """Load proxues database from 'proxies_url'.
+           and return proxies pool.
+        Parameters
+        ----------
+        proxies_url: str.
+            URL of proxies database.
+            if proxies_url startswith 'file://.',
+            expand absolute directory for '.' which is current directory.
+
+        Returns
+        -------
+        pool: itertools.cycle
+        """
+
+        proxies_url = self.normalized_proxies_url(proxies_url)
         df = pd.read_csv(self.proxies_url, names=['proxy'])
         df['proxy'] = f'{proxy_type}://' + df['proxy'].astype(str)
         pool =  [ PROXY(x).to_dict()
