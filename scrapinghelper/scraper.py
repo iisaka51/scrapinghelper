@@ -4,7 +4,7 @@ import ipaddress
 import pyppeteer
 from pathlib import Path
 import itertools
-from typing import Any, Optional, Union, List, NamedTuple
+from typing import Any, Optional, Union, NamedTuple
 #
 import numpy as np
 import pandas as pd
@@ -13,8 +13,12 @@ from requests_html import HTML, HTMLResponse, Element
 import requests_html
 from .logging import logger, LogConfig
 from .url import URL
+from .proxy import ProxyManager, ProxyRotate
 from .user_agents import UserAgent
+from .user_agents import user_agent as useragent_manager
 import snoop
+
+DEFAULT_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/603.3.8 (KHTML, like Gecko) Version/10.1.2 Safari/603.3.8'
 
 class WebScraperException(BaseException):
     pass
@@ -26,54 +30,41 @@ class TAG_LINK(NamedTuple):
     text: str
     link: Union[URL,str]
 
-class BaseProxySession(requests.Session):
-    """ A consumable session, for cookie persistence and connection pooling,
-    amongst other things.
-    """
+def user_agent(style=None):
+    # style is always ignore. just for compatibility.
+    return useragent_manager.first_user_agent
 
-    def __init__(self, mock_browser : bool = True, verify : bool = True,
-                 browser_args : list = ['--no-sandbox']):
-        super().__init__()
+def _gen_browser_args(
+        proxy_server:Optional[str]=None
+    )->list:
+    browser_args =  ['--no-sandbox']
 
-        # Mock a web browser's user agent.
-        if mock_browser:
-            self.headers['User-Agent'] = user_agent()
+    if proxy_server:
+        browser_args += ["--proxy-server='{}'".format(proxy_server) ]
 
-        self.hooks['response'].append(self.response_hook)
-        self.verify = verify
-        self.__browser_args_origin = browser_args
-        self.__browser_args = browser_args
-        self.proxy_server = None
+    return browser_args
 
-    def response_hook(self, response, **kwargs) -> HTMLResponse:
-        """ Change response enconding and replace it by a HTMLResponse. """
-        if not response.encoding:
-            response.encoding = DEFAULT_ENCODING
-        return HTMLResponse._from_response(response, self)
+class HTMLSession(requests_html.HTMLSession):
 
+    def __init__(self, **kwargs:Any):
+        self._proxy_server = None
 
-    def set_proxy_server(self,
-        proxies: dict={},
-        )->None:
-        if 'https' in proxies:
-            self.proxy_server = proxies['https']
-            self.__browser_args = (self.__browser_args_origin +
-                          ["--proxy-server={}".format(self.proxy_server) ] )
-        else:
-            self.proxy_server = None
+        self.proxy_server = kwargs.pop('proxy_server', None)
+
+        if self.proxy_server:
+            browser_args = _gen_browser_args(self.proxy_server)
+            kwargs['browser_args'] = browser_args
+
+        super().__init__(**kwargs)
 
     @property
-    async def browser(self):
-        if not hasattr(self, "_browser"):
-            self._browser = await pyppeteer.launch(
-                           headless=True,
-                           ignoreHTTPSErrors=not(self.verify),
-                           args=self.__browser_args)
-        return self._browser
+    def proxy_server(self):
+        return self._proxy_server
 
-class HTMLSession(BaseProxySession, requests_html.HTMLSession):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    @proxy_server.setter
+    def proxy_server(self, val):
+        if self._proxy_server != val:
+            self._proxy_server = val
 
     @property
     def browser(self):
@@ -85,9 +76,28 @@ class HTMLSession(BaseProxySession, requests_html.HTMLSession):
         return self._browser
 
 
-class AsyncHTMLSession(BaseProxySession, requests_html.AsyncHTMLSession):
+class AsyncHTMLSession(requests_html.AsyncHTMLSession):
+
     def __init__(self, **kwargs):
+        self._proxy_server = None
+
+        self.proxy_server = kwargs.pop('proxy_server', None)
+
+        if self.proxy_server:
+            browser_args = _gen_browser_args(self.proxy_server)
+            kwargs['browser_args'] = browser_args
+
         super().__init__(**kwargs)
+
+    @property
+    def proxy_server(self):
+        return self._proxy_server
+
+    @proxy_server.setter
+    def proxy_server(self, val):
+        if self._proxy_server != val:
+            self._proxy_server = val
+
 
 class Scraper(object):
     def __init__(self,
@@ -96,6 +106,7 @@ class Scraper(object):
                  keep_user_agents: int=50,
                  datapath: Optional[str]=None,
                  headers: Optional[dict]=None,
+                 proxies: Optional[Union[list,str]]=None,
                  logconfig: Optional[LogConfig]=None,
         ):
         """
@@ -103,15 +114,24 @@ class Scraper(object):
         --------
         timeout: int
             if provided, of how many long to wait after initial render.
+
         sleep: int
             if provided, of how many long to sleep after initial render.
+
         keep_user_agents: int
             The number of user_agents to keep in memory. default is 50.
             if 0 passed for keep_user_agents, all data will be kept.
+
         datapath: str
             (option) The CSV filename of user_agents datasets from 51degrees.com.
         headers: dict
             request headers. default is automaticaly generated.
+
+        proxies: proxies: Optional[Union[list,str]]=None
+            list of proxies
+            if proxies startswith 'file://', load proxies from file.
+            if proxies startswith 'https://', load proxies from URL.
+
         logconfig: LogConfig
             if provided, configure for loguru.
 
@@ -125,8 +145,10 @@ class Scraper(object):
         self.df = pd.DataFrame()
         self.session = None
         self.response = None
-        self.proxies = {}
-        self.user_agent = UserAgent(keep_user_agents, datapath)
+        self.proxy_manager = ProxyManager(proxies)
+
+        self.user_agent = useragent_manager
+        self.user_agent.load_datafile(keep_user_agents, datapath)
         self.headers = headers or {
                 "Accept": (
                     "text/html,application/xhtml+xml,"
@@ -142,7 +164,7 @@ class Scraper(object):
         if logconfig:
             logger.remove()
             logger.configure(**(logconfig.config()))
-            logger.debug(f'LOG configure: {logconfig}')
+            logger.debug('LOG configure: {}'.format(logconfig))
         else:
             logger.disable(__name__)
 
@@ -161,6 +183,16 @@ class Scraper(object):
             np.random.randint(0, MAX_IPV6)
         )
 
+    def load_proxies( self,
+        proxies: Optional[Union[list,str]]=None):
+        """ load proxies from URL/file/list.
+        proxies: proxies: Optional[Union[list,str]]=None
+            list of proxies
+            if proxies startswith 'file://', load proxies from file.
+            if proxies startswith 'https://', load proxies from URL.
+        """
+        _ = self.proxy_manager.load_proxies(proxies)
+
     def session_close(self):
         if self.session:
             self.session.close()
@@ -171,7 +203,7 @@ class Scraper(object):
                 timeout: int=0,
                 sleep: int=0,
                 user_agent: Optional[str]=None,
-                proxies: dict={},
+                proxy_rotate: ProxyRotate=ProxyRotate.NO_PROXY,
                 render=True,
                 **kwargs: Any,
         ):
@@ -184,18 +216,19 @@ class Scraper(object):
         elif user_agent == 'random':
             headers = {'User-Agent': self.get_random_user_agent() }
 
-        if proxies and (proxies != self.proxies):
+        if proxy_rotate != ProxyRotate.NO_PROXY:
             self.session_close()
-            AsyncHTMLSession.set_proxy_server(proxies)
 
-        self.session = self.session or AsyncHTMLSession()
+        self.session = self.session or AsyncHTMLSession(
+                    proxy_server=self.proxy_manager.get_proxy(proxy_rotate))
         self.session.headers.update(self.headers)
-        logger.debug(f'URL: {url}')
+        logger.debug('URL: {}'.format(url))
 
         async def get_page():
-            response = await self.session.get(url, **kwargs)
-            logger.debug(f'response status_code: {response.status_code}')
-            snoop.pp(type(response))
+            proxy = self.proxy_manager.get_proxy(proxy_rotate)
+            proxy_map = proxy.proxy_map if proxy else None
+            response = await self.session.get(url, proxies=proxy_map, **kwargs)
+            logger.debug('response status_code: {}'.format(response.status_code))
             if render:
                 await response.html.arender(
                                 timeout=self.timeout,
@@ -210,10 +243,12 @@ class Scraper(object):
                 timeout: int=0,
                 sleep: int=0,
                 user_agent: Optional[str]=None,
-                proxies: dict={},
+                proxy_rotate: ProxyRotate=ProxyRotate.NO_PROXY,
                 render=True,
                 **kwargs: Any,
         ):
+        """request get page from URL
+        """
         self.timeout = timeout or self.timeout
         self.sleep = sleep or self.sleep
         self.url = url
@@ -224,19 +259,23 @@ class Scraper(object):
             headers = {'User-Agent': self.get_random_user_agent() }
 
         try:
-            if proxies and (proxies != self.proxies):
+            if proxy_rotate != ProxyRotate.NO_PROXY:
                 self.session_close()
-                HTMLSession.set_proxy_server(proxies)
-            self.session = self.session or HTMLSession()
+
+            self.session = self.session or HTMLSession(
+                    proxy_server=self.proxy_manager.get_proxy(proxy_rotate))
             self.session.headers.update(self.headers)
-            logger.debug(f'URL: {url}')
-            self.response = self.session.get(url, proxies=proxies, **kwargs)
-            logger.debug(f'response status_code: {self.response.status_code}')
+            logger.debug('URL: {}'.format(url))
+            proxy= self.proxy_manager.get_proxy(proxy_rotate)
+            proxy_map = proxy.proxy_map if proxy else None
+            self.response = self.session.get(url, proxies=proxy_map, **kwargs)
+            logger.debug('response status_code: {}'.format(self.response.status_code))
             if render:
                 self.response.html.render(
                     timeout=self.timeout,
                     sleep=np.random.randint(2,self.sleep))
             return self.response
+
         except requests.exceptions.RequestException as e:
             logger.exception("request failed")
 

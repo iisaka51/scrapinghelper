@@ -1,22 +1,12 @@
+import os
 import re
 import random
+import itertools
 from urllib.parse import urlparse
 from pathlib import Path
-from itertools import cycle
-from typing import Optional, NamedTuple
+from typing import Optional, Union, NamedTuple
+from enum import Enum
 import pandas as pd
-import snoop
-
-__DEFAULT_PUBLIC_PROXY__ = 'Hookzof'
-
-PUBLIC_PROXIES = {
-    "TheSpeedX": (
-        "https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/"
-        "master/socks5.txt" ),
-    "Hookzof" : (
-        "https://raw.githubusercontent.com/hookzof/"
-        "socks5_list/master/proxy.txt" ),
-}
 
 IP_MIDDLE_OCTET = r"(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5]))"
 IP_LAST_OCTET = r"(?:\.(?:0|[1-9]\d?|1\d\d|2[0-4]\d|25[0-5]))"
@@ -61,6 +51,12 @@ PROXY_PATTERN = ( # noqa: W605
 
 re_pattern = re.compile( r"^" + PROXY_PATTERN + r"$", re.UNICODE | re.IGNORECASE)
 
+class ProxyRotate( Enum):
+    NO_PROXY = 1
+    KEEP = 2
+    NEXT = 3
+    RANDOM = 4
+
 class ProxyParseError(BaseException):
     pass
 
@@ -73,9 +69,8 @@ class ResultProxyValidator(NamedTuple):
     password: Optional[str]
     hostname: str
     port: Optional[str]
-    as_dict: dict
+    proxy_map: dict
 
-@snoop
 def proxyparse(
         value: str,
         proxy_type='https'
@@ -101,10 +96,11 @@ def proxyparse(
 
     c = any(value.startswith(x) for x in ['http', 'socks', 'direct', 'quic'])
     if not c:
-         url_prefix = f'{proxy_type}://' if proxy_type else ''
-         proxy_str = f'{url_prefix}{value}'
+         url_prefix = '{}://'.format(proxy_type) if proxy_type else ''
+         proxy_str = '{}{}'.format(url_prefix,value)
     else:
          url_prefix = ''
+         proxy_str = value
 
     proxy_url =  value
     is_valid = True
@@ -115,12 +111,12 @@ def proxyparse(
     password = v.password
     hostname = v.hostname
     port = v.port
-    as_dict =  {'http': f'{url_prefix}{str(proxy_url)}',
-                'https': f'{url_prefix}{str(proxy_url)}' }
+    proxy_map =  {'http': '{}{}'.format(url_prefix, str(proxy_url)),
+                  'https': '{}{}'.format(url_prefix, str(proxy_url)) }
 
     return ResultProxyValidator( proxy_url, is_valid,
                         scheme, netloc, username, password,
-                        hostname, port, as_dict )
+                        hostname, port, proxy_map )
 
 def proxy_validator(value, public=False):
     """
@@ -180,7 +176,7 @@ class PROXY(object):
         proxy_type: str='https',
         ) -> ResultProxyValidator:
         self.validate = self.__validator(proxy_str, proxy_type)
-        self.__dict__.update(self.validate.as_dict)
+        self.__dict__.update(self.validate._asdict())
 
     def validator(self, proxy_str: str) -> bool:
         """Validator for PROXY strings.
@@ -206,8 +202,18 @@ class PROXY(object):
         >>> p.validator('ftp://example.com')
         False
 
-        >>> p('http://10.0.0.1')
+        >>> p.validator('http://10.0.0.1')
         True
+
+        >>> p.load_proxies('file:///tmp/myproxies.csv')
+
+        >>> p.load_proxies('https://somewhere.com/share/myproxies.csv')
+
+        >>> p = PROXY('file:///tmp/myproxies.csv')
+
+        >>> p = PROXY('https://somewhere.com/share/myproxies.csv')
+
+        >>> p = PROXY(['127.0.0.1:9050'])
 
         """
         return self.__validator(proxy_str).is_valid
@@ -226,7 +232,7 @@ class PROXY(object):
             _password = v.password
             _hostname =  v.hostname
             _port = v.port
-            _as_dict = v.as_dict
+            _proxy_map = v.proxy_map
         except:
             _is_valid = False
             _scheme = ''
@@ -235,13 +241,13 @@ class PROXY(object):
             _password = None
             _hostname =  ''
             _port = None
-            _as_dict = {}
+            _proxy_map = {}
 
         result = ResultProxyValidator(
                     proxy_str, _is_valid,
                     _scheme, _netloc,
                     _username, _password,
-                    _hostname, _port, _as_dict )
+                    _hostname, _port, _proxy_map )
 
         return result
 
@@ -254,43 +260,95 @@ class PROXY(object):
 
 
 class ProxyManager(object):
-    def __init__(self, proxies_url=None):
-        self.proxies_url = (
-             self.normalized_proxies_url(proxies_url)
-             or PUBLIC_PROXIES[__DEFAULT_PUBLIC_PROXY__] )
-        self.proxies = self.load_proxies(self.proxies_url)
-        self.proxies_pool = cycle(self.proxies)
-
-    @staticmethod
-    def show_proxies_source():
-        return [x for x in PUBLIC_PROXIES.keys()]
-
-    def normalized_proxies_url(self,
-        proxies_url:str
-        ) -> Optional[str]:
-        """ normalized proxies_url.
+    def __init__(self, proxies: Optional[Union[list,str]]=None):
+        """ Proxy Manager
+        load proxy data and create proxy pool
         Parameters
         ----------
-        proxies_url: str
-            if proxies_url startswith 'file://.',
+        proxies: proxies: Optional[Union[list,str]]=None
+            list of proxies
+            if proxies startswith 'file://', load proxies from file.
+            if proxies startswith 'https://', load proxies from URL.
+        """
+        self._current_proxy: Optional[PROXY] = None
+        self._proxies: list = []
+        self._proxy_pool: Optional[itertools.cycle]=None
+
+        proxies = ( proxies
+                    or os.environ.get('SCRAPINGHELPER_PROXIES',
+                                      default=None) )
+        if isinstance(proxies, list):
+            self.proxies = proxies
+        else:
+            if not isinstance(proxies, str):
+                proxies = str(proxies)
+            if proxies.startswith('file://'):
+                filepath = self.normalized_filepath(proxies)
+                self.proxies = self.load_proxies(filepath, inplace=False)
+            else:
+                self.proxies = [proxies]
+
+        self.proxies_pool = itertools.cycle(self.proxies)
+
+    @property
+    def proxies(self) ->list:
+        return self._proxies
+
+    @proxies.setter
+    def proxies(self, val: list):
+        if isinstance(val, list) and self._proxies != val:
+            self._proxies = val
+
+    @property
+    def proxy_pool(self) ->list:
+        return self._proxy_pool
+
+    @proxy_pool.setter
+    def proxy_pool(self, val: itertools.cycle):
+        if isinstance(val, itertools.cycle) and self._proxy_pool != val:
+            self._proxy_pool = val
+
+    @property
+    def current_proxy(self) ->str:
+        if not self._current_proxy:
+            self._current_proxy = self.next_proxy(inplace=False)
+        return self._current_proxy
+
+    @current_proxy.setter
+    def current_proxy(self, val) ->None:
+        if self._current_proxy != val:
+            self._current_proxy = val
+
+    @classmethod
+    def normalized_filepath(cls,
+        filepath:str
+        ) -> Optional[str]:
+        """ normalized filepath.
+        Parameters
+        ----------
+        filepath: str
+            if filepath startswith 'file://.',
             expand absolute directory for '.' which is current directory.
         Returns
         -------
         normaized proxies_url:str
         """
-        if  proxies_url:
+        if not filepath:
             return None
 
-        proxies_url = str(proxies_url)
-        if proxies_url.startswith('file://.'):
-            proxies_url = proxies_url.replace('file://.','')
+        if not isinstance(filepath, str):
+            filepath = str(filepath)
+        if filepath.startswith('file://.'):
+            filepath = filepath.replace('file://.','')
             this_directory = Path(__file__).parent
-            proxies_url = f'file://{str(this_directory / proxies_url )}'
-        return proxies_url
+            filepath = 'file://{}/{}'.format(str(this_directory),filepath)
+        return filepath
 
     def load_proxies(self,
         proxies_url: Optional[str]=None,
-        proxy_type: str='https') ->cycle:
+        proxy_type: str='https',
+        inplace: bool=True,
+        ) ->itertools.cycle:
         """Load proxues database from 'proxies_url'.
            and return proxies pool.
         Parameters
@@ -299,21 +357,42 @@ class ProxyManager(object):
             URL of proxies database.
             if proxies_url startswith 'file://.',
             expand absolute directory for '.' which is current directory.
+            if proxies_url startswith 'https://',
+            read proxies list from URL.
 
         Returns
         -------
         pool: itertools.cycle
         """
 
-        proxies_url = self.normalized_proxies_url(proxies_url)
-        df = pd.read_csv(self.proxies_url, names=['proxy'])
-        df['proxy'] = f'{proxy_type}://' + df['proxy'].astype(str)
-        pool =  [ PROXY(x).to_dict()
-                  for x in df['proxy'].values.tolist()]
-        return pool
+        proxies_url = self.normalized_filepath(proxies_url)
+        df = pd.read_csv(proxies_url, names=['proxy'], header=None)
+        df['proxy'] = df['proxy'].astype(str)
+        proxies =  [ PROXY(x, proxy_type).proxy_url
+                          for x in df['proxy'].values.tolist()]
+        if inplace:
+            self.proxies = proxies
+        else:
+            return proxies
 
-    def random_proxy(self):
-        return random.choice(self.proxies)
+    def random_proxy(self, inplace=True) ->PROXY:
+        proxy = PROXY(random.choice(self.proxies))
+        if inplace:
+            self.current_proxy = proxy
+        return proxy
 
-    def next_proxy(self):
-        return next(self.proxies_pool)
+    def next_proxy(self, inplace=True) ->PROXY:
+        proxy =  PROXY(next(self.proxies_pool))
+        if inplace:
+            self.current_proxy = proxy
+        return proxy
+
+    def get_proxy(self, rotate: ProxyRotate=ProxyRotate.NEXT) ->PROXY:
+        dispatch = { ProxyRotate.NEXT: self.next_proxy,
+                     ProxyRotate.RANDOM: self.random_proxy,
+                     ProxyRotate.KEEP: lambda : self.current_proxy, }
+
+        if rotate in dispatch:
+            return dispatch[rotate]()
+        else:
+            return None

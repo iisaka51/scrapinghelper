@@ -1,9 +1,10 @@
+import os
 import sys
 
 sys.path.insert(0,"../scrapinghelper")
 
 from pathlib import Path
-from scrapinghelper import UserAgent
+from scrapinghelper import UserAgent, user_agent
 from pprint import pprint
 
 class TestClass:
@@ -34,3 +35,26 @@ class TestClass:
         u = UserAgent(datapath=datapath)
         assert u.keep_user_agents == 50
         assert len(u.user_agents) == 50
+
+    def test_reload_user_agent_from_file(self):
+        this_directory = Path(__file__).parent
+        datapath = this_directory / "user_agent_test.csv"
+
+        u = UserAgent()
+        u.load_datafile(datapath=datapath)
+        assert u.keep_user_agents == 50
+        assert len(u.user_agents) == 50
+
+    def test_load_user_agent_from_env(self):
+        this_directory = Path(__file__).parent
+        datapath = this_directory / "user_agent_test.csv"
+        os.environ.update(
+             {'SCRAPINGHELPER_USERAGENT_PATH': str(datapath)})
+        u = UserAgent()
+        assert u.keep_user_agents == 50
+        assert len(u.user_agents) == 50
+
+    def test_func_user_agent(self):
+        ua1 = user_agent()
+        ua2 = user_agent()
+        assert ua1== ua2

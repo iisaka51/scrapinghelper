@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from typing import Optional
+from itertools import cycle
 import numpy as np
 import pandas as pd
 
@@ -21,6 +22,17 @@ class UserAgent(object):
         datapath: Optional[str]
             The CSV filename of user_agents datasets from 51degrees.com.
         """
+
+        self.load_datafile(keep_user_agents, datapath)
+        self.user_agent_pool = cycle(self.user_agents.user_agent.to_list())
+        self.first_user_agent = next(self.user_agent_pool)
+
+
+    def load_datafile(self,
+        keep_user_agents: int=50,
+        datapath: Optional[str]=None,
+        ) ->None:
+
         self.__known_bad_user_agents = ['Hello, world']
 
         datapath = datapath or os.environ.get('SCRAPINGHELPER_USERAGENT_PATH',
@@ -51,3 +63,11 @@ class UserAgent(object):
                                           replace=True, size=1))
         return self.user_agents.iloc[chosen_index,0]
 
+    def get_next_user_agent(self) ->str:
+        return next(self.user_agent_pool)
+
+    def __repr__(self):
+        return self.first_user_agent
+
+
+user_agent = UserAgent()

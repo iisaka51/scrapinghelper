@@ -1,11 +1,11 @@
 import sys
 from .scraper import (
     Scraper, TAG_LINK,
-    HTMLSession, AsyncHTMLSession, HTML, HTMLResponse, Element
+    HTMLSession, AsyncHTMLSession, HTML, HTMLResponse, Element, user_agent
 )
 from .user_agents import UserAgent
 from .url import URL, remove_urls, replace_urls
-from .proxy import ProxyManager, PROXY
+from .proxy import ProxyManager, PROXY, ProxyRotate
 from .logging import LogConfig, LOG_LEVEL
 from .versions import __VERSION__
 
@@ -24,11 +24,13 @@ __all__ = [
     "HTML",
     "HTMLResponse",
     "Element",
+    "user_agent",
     "UserAgent",
     "URL",
     "remove_urls",
     "replace_urls",
     "ProxyManager",
+    "ProxyRotate",
     "PROXY",
     "LogConfig",
     "LOG_LEVEL",
