@@ -1,5 +1,6 @@
-import asyncio
+import os
 import time
+import asyncio
 import ipaddress
 import pyppeteer
 from pathlib import Path
@@ -37,7 +38,9 @@ def user_agent(style=None):
 def _gen_browser_args(
         proxy_server:Optional[str]=None
     )->list:
-    browser_args =  ['--no-sandbox']
+    browser_args = os.environ.get('SCRAPINGHELPER_BROWSER_ARGS',
+                       default='--no-sandbox -ignore-certificate-errors' )
+    browser_args = browser_args.split(' ')
 
     if proxy_server:
         browser_args += ["--proxy-server='{}'".format(proxy_server) ]
