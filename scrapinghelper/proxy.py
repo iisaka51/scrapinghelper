@@ -288,7 +288,7 @@ class ProxyManager(object):
             else:
                 self.proxies = [proxies]
 
-        self.proxies_pool = itertools.cycle(self.proxies)
+        self.proxy_pool = itertools.cycle(self.proxies)
 
     @property
     def proxies(self) ->list:
@@ -372,6 +372,7 @@ class ProxyManager(object):
                           for x in df['proxy'].values.tolist()]
         if inplace:
             self.proxies = proxies
+            self.proxy_pool = itertools.cycle(self.proxies)
         else:
             return proxies
 
@@ -382,7 +383,7 @@ class ProxyManager(object):
         return proxy
 
     def next_proxy(self, inplace=True) ->PROXY:
-        proxy =  PROXY(next(self.proxies_pool))
+        proxy =  PROXY(next(self.proxy_pool))
         if inplace:
             self.current_proxy = proxy
         return proxy

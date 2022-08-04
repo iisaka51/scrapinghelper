@@ -267,27 +267,39 @@ if passed `render=False`, `request()` skip call `render()`.
 scrapinghelper support `render()` with proxy.
 
 ```
-In [2]: # %load check_ipaddress.py
-   ...: from scrapinghelper import Scraper, URL
+In [2]: # %load examples/check_ipaddress.py
+   ...: from scrapinghelper import Scraper, ProxyManager, ProxyRotate
    ...:
    ...: # tiny socks5 proxy
-   ...: proxies = {
-   ...:         'http':'socks5://127.0.0.1:9050',
-   ...:         'https':'socks5://127.0.0.1:9050'
-   ...:         }
+   ...: proxies = [ 'socks5://127.0.0.1:9050']
    ...: url = 'https://httpbin.org/ip'
    ...:
-   ...: scraper = Scraper()
-   ...: response = scraper.request(url)
-   ...: print(response.html.text)
-   ...: response = scraper.request(url,proxies=proxies)
-   ...: print(response.html.text)
-   ...: response = scraper.request(url,proxies=proxies, render=False)
+   ...: scraper = Scraper(proxies=proxies)
+   ...:
+   ...: # default proxy_rotate is ProxyRotate.NO_PROXY
+   ...: # does not call render()
+   ...: response = scraper.request(url, render=False)
    ...: print(response.html.text)
    ...:
+   ...: # using next proxy server.
+   ...: response = scraper.request(url, proxy_rotate=ProxyRotate.NEXT, render=Fa
+   ...: lse)
+   ...: print(response.html.text)
+   ...:
+   ...: # using current proxy server.
+   ...: response = scraper.request(url, proxy_rotate=ProxyRotate.KEEP, render=Fa
+   ...: lse)
+   ...: print(response.html.text)
+   ...:
+   ...: # using random proxy server.
+   ...: response = scraper.request(url, proxy_rotate=ProxyRotate.RANDOM)
+   ...: print(response.html.text)
+   ...:
+
 { "origin": "221.186.103.38" }
-{ "origin": "185.195.71.3" }
-{ "origin": "185.195.71.3" }
+{ "origin": "185.220.101.182" }
+{ "origin": "185.220.101.182" }
+{ "origin": "185.220.101.182" }
 
 In [3]:
 ```
@@ -299,23 +311,52 @@ default is [github.com/hookzof](https://raw.githubusercontent.com/hookzof/socks5
 Please keep in mind, there proxies are ABSOLUTELY NO WARRANTY.
 
 ```
-In [2]: # %load examples/get_proxy.py
-   ...: from scrapinghelper import ProxyManager
-   ...:
-   ...: p = ProxyManager()
-   ...: print(p.proxies[:2])
-   ...:
-   ...: print(p.next_proxy())
-   ...: print(p.next_proxy())
-   ...: print(p.get_random_proxy())
-   ...:
-   ...:
-[{'http': socks5://85.221.247.236:8080, 'https': socks5://85.221.247.236:8080}, {'http': socks5://109.201.9.100:8080, 'https': socks5://109.201.9.100:8080}]
-{'http': socks5://85.221.247.236:8080, 'https': socks5://85.221.247.236:8080}
-{'http': socks5://109.201.9.100:8080, 'https': socks5://109.201.9.100:8080}
-{'http': socks5://1.224.3.122:3888, 'https': socks5://1.224.3.122:3888}
+In [1]: from scrapinghelper import ProxyManager, PROXY
 
-In [3]:
+In [2]: pm = ProxyManager()
+
+In [3]: pm.load_proxies('https://raw.githubusercontent.com/hookzof/socks5_list/m
+   ...: aster/proxy.txt')
+
+In [4]: pm.proxies[:5]
+Out[4]:
+['101.67.215.147:44844',
+ '103.108.228.185:7497',
+ '103.53.228.217:7497',
+ '104.248.142.28:7497',
+ '110.244.11.102:44844']
+
+In [5]: pm.proxy_pool
+Out[5]: <itertools.cycle at 0x10a2feb80>
+
+In [6]: pm.next_proxy()
+Out[6]: 101.67.215.147:44844
+
+In [7]: pm.next_proxy()
+Out[7]: 103.108.228.185:7497
+
+In [8]: pm.random_proxy()
+Out[8]: 49.85.231.143:44844
+
+In [9]: pm.random_proxy().proxy_map
+Out[9]:
+{'http': 'https://27.214.161.122:44844',
+ 'https': 'https://27.214.161.122:44844'}
+
+In [10]: PROXY(pm.random_proxy()).attrs
+Out[10]:
+{'proxy_url': 39.88.67.26:44844,
+ 'is_valid': True,
+ 'scheme': 'https',
+ 'netloc': '39.88.67.26:44844',
+ 'username': None,
+ 'password': None,
+ 'hostname': '39.88.67.26',
+ 'port': 44844,
+ 'proxy_map': {'http': 'https://39.88.67.26:44844',
+  'https': 'https://39.88.67.26:44844'}}
+
+In [11]:
 ```
 
 you can filename as url. i.e.:
