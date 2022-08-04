@@ -316,47 +316,49 @@ In [1]: from scrapinghelper import ProxyManager, PROXY
 In [2]: pm = ProxyManager()
 
 In [3]: pm.load_proxies('https://raw.githubusercontent.com/hookzof/socks5_list/m
-   ...: aster/proxy.txt')
+   ...: aster/proxy.txt', proxy_type='socks5')
 
 In [4]: pm.proxies[:5]
 Out[4]:
 ['101.67.215.147:44844',
+ '103.110.84.199:7497',
  '103.108.228.185:7497',
- '103.53.228.217:7497',
- '104.248.142.28:7497',
- '110.244.11.102:44844']
+ '103.74.121.46:27102',
+ '1.57.21.59:7302']
 
 In [5]: pm.proxy_pool
-Out[5]: <itertools.cycle at 0x10a2feb80>
+Out[5]: <itertools.cycle at 0x11bdd1b80>
 
 In [6]: pm.next_proxy()
 Out[6]: 101.67.215.147:44844
 
 In [7]: pm.next_proxy()
-Out[7]: 103.108.228.185:7497
+Out[7]: 103.110.84.199:7497
 
 In [8]: pm.random_proxy()
-Out[8]: 49.85.231.143:44844
+Out[8]: 72.210.252.134:46164
 
 In [9]: pm.random_proxy().proxy_map
-Out[9]:
-{'http': 'https://27.214.161.122:44844',
- 'https': 'https://27.214.161.122:44844'}
+Out[9]: {'http': 'socks5://1.57.21.59:7302', 'https': 'socks5://1.57.21.59:7302'}
 
-In [10]: PROXY(pm.random_proxy()).attrs
-Out[10]:
-{'proxy_url': 39.88.67.26:44844,
+In [10]: pm.current_proxy
+Out[10]: 1.57.21.59:7302
+
+In [11]: pm.current_proxy.attrs
+Out[11]:
+{'proxy_url': '1.57.21.59:7302',
  'is_valid': True,
- 'scheme': 'https',
- 'netloc': '39.88.67.26:44844',
+ 'scheme': 'socks5',
+ 'netloc': '1.57.21.59:7302',
  'username': None,
  'password': None,
- 'hostname': '39.88.67.26',
- 'port': 44844,
- 'proxy_map': {'http': 'https://39.88.67.26:44844',
-  'https': 'https://39.88.67.26:44844'}}
+ 'hostname': '1.57.21.59',
+ 'port': 7302,
+ 'proxy_map': {'http': 'socks5://1.57.21.59:7302',
+  'https': 'socks5://1.57.21.59:7302'}}
 
-In [11]:
+In [12]:
+
 ```
 
 you can filename as url. i.e.:

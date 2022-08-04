@@ -273,6 +273,7 @@ class ProxyManager(object):
         self._current_proxy: Optional[PROXY] = None
         self._proxies: list = []
         self._proxy_pool: Optional[itertools.cycle]=None
+        self._proxy_type: str = 'https'
 
         proxies = ( proxies
                     or os.environ.get('SCRAPINGHELPER_PROXIES',
@@ -289,6 +290,17 @@ class ProxyManager(object):
                 self.proxies = [proxies]
 
         self.proxy_pool = itertools.cycle(self.proxies)
+
+    @property
+    def proxy_type(self) ->str:
+        return self._proxy_type
+
+    @proxy_type.setter
+    def proxy_type(self, val):
+        if val in ['http', 'https', 'socks4', 'socks5', 'direct', 'quic']:
+            self._proxy_type = val
+        else:
+            raise ValueError('Invalid proxy_type')
 
     @property
     def proxies(self) ->list:
@@ -372,18 +384,19 @@ class ProxyManager(object):
                           for x in df['proxy'].values.tolist()]
         if inplace:
             self.proxies = proxies
+            self.proxy_type = proxy_type
             self.proxy_pool = itertools.cycle(self.proxies)
         else:
             return proxies
 
     def random_proxy(self, inplace=True) ->PROXY:
-        proxy = PROXY(random.choice(self.proxies))
+        proxy = PROXY(random.choice(self.proxies), self.proxy_type)
         if inplace:
             self.current_proxy = proxy
         return proxy
 
     def next_proxy(self, inplace=True) ->PROXY:
-        proxy =  PROXY(next(self.proxy_pool))
+        proxy =  PROXY(next(self.proxy_pool), self.proxy_type)
         if inplace:
             self.current_proxy = proxy
         return proxy
