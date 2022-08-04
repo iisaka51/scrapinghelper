@@ -54,7 +54,3 @@ class TestClass:
         assert u.keep_user_agents == 50
         assert len(u.user_agents) == 50
 
-    def test_func_user_agent(self):
-        ua1 = user_agent()
-        ua2 = user_agent()
-        assert ua1== ua2

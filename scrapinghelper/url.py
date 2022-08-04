@@ -238,6 +238,19 @@ class URL(object):
         url: str
             The url is quoted he %-escapes all characters.
         """
+        self.url: str
+        self.is_valid: bool
+        self.scheme: str
+        self.netloc: str
+        self.username: Optional[str]
+        self.password: Optional[str]
+        self.hostname: str
+        self.port: Optional[str]
+        self.path: str
+        self.params: str
+        self.query: str
+        self.fragment: str
+        self.basename: str
 
         self.safe = safe or self.__default_safe
         if url:

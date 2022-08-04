@@ -17,6 +17,7 @@ And new features.
 - URL / PROXY parser with validator.
 - UserAgent manager using collected real user-agents.
 - proxy rotation suppport.
+- access with random wait time
 - shell environment options.
 - logging support.
 
@@ -221,7 +222,6 @@ or set shell Environmnet "SCRAPINGHELPER_USERAGENT_PATH".
 export SCRAPINGHELPER_USERAGENT_PATH="/path/to/new_user_agent_csvfile"
 ```
 
-
 ```python
 In [2]: from scrapinghelper import URL, Scraper, LogConfig
    ...:
@@ -373,7 +373,7 @@ there uri expand as follows.
         if proxies_url.startswith('file://.'):
             proxies_url = proxies_url.replace('file://.','')
             this_directory = Path(__file__).parent
-            proxies_url = f'file://{str(this_directory / proxies_url )}'
+            proxies_url = 'file://{}/{}'.format(this_directory, proxies_url)
 ```
 
   **CAUTION**

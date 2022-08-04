@@ -22,6 +22,7 @@ class UserAgent(object):
         datapath: Optional[str]
             The CSV filename of user_agents datasets from 51degrees.com.
         """
+        self.first_user_agent: str = ''
 
         self.load_datafile(keep_user_agents, datapath)
 

@@ -16,7 +16,7 @@ from requests_html import (
 import requests_html
 from .logging import logger, LogConfig
 from .url import URL
-from .proxy import ProxyManager, ProxyRotate
+from .proxy import ProxyManager, ProxyRotate, PROXY
 from .user_agents import UserAgent
 from .user_agents import user_agent as useragent_manager
 
@@ -32,7 +32,7 @@ class TAG_LINK(NamedTuple):
     text: str
     link: Union[URL,str]
 
-def user_agent(style=None):
+def user_agent(style:Optional[str]=None) ->str:
     # style is always ignore. just for compatibility.
     try:
         return useragent_manager.first_user_agent
@@ -42,9 +42,9 @@ def user_agent(style=None):
 def _gen_browser_args(
         proxy_server:Optional[str]=None
     )->list:
-    browser_args = os.environ.get('SCRAPINGHELPER_BROWSER_ARGS',
+    default_args = os.environ.get('SCRAPINGHELPER_BROWSER_ARGS',
                        default='--no-sandbox -ignore-certificate-errors' )
-    browser_args = browser_args.split(' ')
+    browser_args: list = default_args.split(' ')
 
     if proxy_server:
         browser_args += ["--proxy-server={}".format(proxy_server) ]
@@ -85,7 +85,7 @@ class HTMLSession(requests_html.BaseSession):
             self._browser = self.loop.run_until_complete(super().browser)
         return self._browser
 
-    def close(self):
+    def close(self) ->None:
         """ If a browser was created close it first. """
         if hasattr(self, "_browser"):
             self.loop.run_until_complete(self._browser.close())
@@ -129,7 +129,7 @@ class AsyncHTMLSession(requests_html.BaseSession):
         func = partial(super().request, *args, **kwargs)
         return self.loop.run_in_executor(self.thread_pool, func)
 
-    async def close(self):
+    async def close(self) ->None:
         """ If a browser was created close it first. """
         if hasattr(self, "_browser"):
             await self._browser.close()
@@ -187,12 +187,12 @@ class Scraper(object):
         """
         self.timeout = timeout
         self.sleep = sleep
-        self.columns = list()
-        self.values = list()
-        self.df = pd.DataFrame()
-        self.session = None
-        self.response = None
-        self.proxy_manager = ProxyManager(proxies)
+        self.columns: list = list()
+        self.values: list = list()
+        self.df: pd.DataFrame = pd.DataFrame()
+        self.session: Union[HTMLSession, AsyncHTMLSession] = None
+        self.response: HTMLResponse = None
+        self.proxy_manager: ProxyManager = ProxyManager(proxies)
 
         self.user_agent = useragent_manager
         self.user_agent.load_datafile(keep_user_agents, datapath)
@@ -240,7 +240,7 @@ class Scraper(object):
         """
         _ = self.proxy_manager.load_proxies(proxies)
 
-    def session_close(self):
+    def session_close(self) ->None:
         if self.session:
             self.session.close()
             self.session = None
@@ -251,9 +251,9 @@ class Scraper(object):
                 sleep: int=0,
                 user_agent: Optional[str]=None,
                 proxy_rotate: ProxyRotate=ProxyRotate.NO_PROXY,
-                render=True,
+                render: bool=True,
                 **kwargs: Any,
-        ):
+        ) ->HTMLResponse:
         self.timeout = timeout or self.timeout
         self.sleep = sleep or self.sleep
         self.url = url
@@ -266,8 +266,11 @@ class Scraper(object):
         if proxy_rotate != ProxyRotate.NO_PROXY:
             self.session_close()
 
-        self.session = self.session or AsyncHTMLSession(
-                    proxy_server=self.proxy_manager.get_proxy(proxy_rotate))
+        if not self.session:
+            proxy_server = self.proxy_manager.get_proxy(proxy_rotate)
+            proxy_server = proxy_server.proxy_map['https'] if proxy_server else None
+            self.session = AsyncHTMLSession( proxy_server=proxy_server)
+
         self.session.headers.update(self.headers)
         logger.debug('URL: {}'.format(url))
 
@@ -291,9 +294,9 @@ class Scraper(object):
                 sleep: int=0,
                 user_agent: Optional[str]=None,
                 proxy_rotate: ProxyRotate=ProxyRotate.NO_PROXY,
-                render=True,
+                render: bool=True,
                 **kwargs: Any,
-        ):
+        ) ->HTMLResponse:
         """request get page from URL
         """
         self.timeout = timeout or self.timeout
@@ -309,8 +312,11 @@ class Scraper(object):
             if proxy_rotate != ProxyRotate.NO_PROXY:
                 self.session_close()
 
-            self.session = self.session or HTMLSession(
-                    proxy_server=self.proxy_manager.get_proxy(proxy_rotate))
+            if not self.session:
+                proxy_server = self.proxy_manager.get_proxy(proxy_rotate)
+                proxy_server = proxy_server.proxy_map['https'] if proxy_server else None
+                self.session = HTMLSession(proxy_server=proxy_server)
+
             self.session.headers.update(self.headers)
             logger.debug('URL: {}'.format(url))
             proxy= self.proxy_manager.get_proxy(proxy_rotate)
@@ -325,15 +331,6 @@ class Scraper(object):
 
         except requests.exceptions.RequestException as e:
             logger.exception("request failed")
-
-    def ommit_char(self,
-        values: str,
-        omits: str,
-        )-> str:
-            omit_map = ((x, '') for x in omits)
-            for n in range(len(values)):
-                values[n] = values[n].replace(*omit_map)
-            return values
 
     def get_texts(self,
         html: HTML,
@@ -435,13 +432,13 @@ class Scraper(object):
                 filename = None
 
         if filename and replace:
-            filename = filename.replace( replace )
+            filename = filename.replace( *replace )
 
         return filename
 
     def download_file(self,
         url: Union[URL, str],
-        filename: Optional[str]=None,
+        filename: str='',
         sleep: int=0,
         user_agent: Optional[str]=None,
         ) -> bool:
@@ -489,10 +486,24 @@ class Scraper(object):
         except:
             raise WebScraperException('download failed')
 
-    def add_df(self, values, columns, omits = None):
-            if omits is not None:
-                values = self.omit_char(values,omits)
-                columns = self.omit_char(columns,omits)
+    def omit_chars(self,
+        values: list,
+        omits: list,
+        )-> list:
+            omit_map = ((x, '') for x in omits)
+            for n in range(len(values)):
+                values[n] = values[n].replace(*omit_map)
+            return values
+
+    def add_df(self,
+            values: list,
+            columns: list,
+            omits: list=[]
+        ) ->pd.DataFrame:
+
+            if omits:
+                values = self.omit_chars(values,omits)
+                columns = self.omit_chars(columns,omits)
 
             # Since Pandas 1.3.0
             df = pd.DataFrame(values,index=columns)._maybe_depup_names(columns)

@@ -175,6 +175,16 @@ class PROXY(object):
         proxy_str: Optional[str]=None,
         proxy_type: str='https',
         ) -> ResultProxyValidator:
+        self.proxy_url: str
+        self.is_valid: bool
+        self.scheme: str
+        self.netloc: str
+        self.username: Optional[str]
+        self.password: Optional[str]
+        self.hostname: str
+        self.port: Optional[str]
+        self.proxy_map: dict
+
         self.validate = self.__validator(proxy_str, proxy_type)
         self.__dict__.update(self.validate._asdict())
 
