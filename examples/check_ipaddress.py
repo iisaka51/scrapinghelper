@@ -6,15 +6,19 @@ url = 'https://httpbin.org/ip'
 
 scraper = Scraper(proxies=proxies)
 
+# default proxy_rotate is ProxyRotate.NO_PROXY
+# does not call render()
 response = scraper.request(url, render=False)
 print(response.html.text)
 
+# using next proxy server.
 response = scraper.request(url, proxy_rotate=ProxyRotate.NEXT, render=False)
 print(response.html.text)
 
+# using current proxy server.
 response = scraper.request(url, proxy_rotate=ProxyRotate.KEEP, render=False)
 print(response.html.text)
 
-# response = scraper.request(url, proxy_rotate=ProxyRotate.RANDOM)
-response = scraper.request(url, proxy_rotate=ProxyRotate.KEEP)
+# using random proxy server.
+response = scraper.request(url, proxy_rotate=ProxyRotate.RANDOM)
 print(response.html.text)

@@ -39,6 +39,8 @@ setup(
     package_data={'': [ 'data/*.csv', 'data/LICENSE' ]},
     classifiers=[
         "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
     ],
 )

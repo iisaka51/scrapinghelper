@@ -1,11 +1,11 @@
 import sys
 from .scraper import (
-    Scraper, TAG_LINK,
-    HTMLSession, AsyncHTMLSession, HTML, HTMLResponse, Element, user_agent
+    Scraper, TAG_LINK, WebScraperException, WebScraperNotFound, MaxRetries,
+    HTMLSession, AsyncHTMLSession, HTML, HTMLResponse, Element, PyQuery
 )
 from .user_agents import UserAgent, user_agent
 from .url import URL, remove_urls, replace_urls
-from .proxy import ProxyManager, PROXY, ProxyRotate
+from .proxy import ProxyManager, PROXY, ProxyRotate, ProxyParseError
 from .logging import LogConfig, LOG_LEVEL
 from .versions import __VERSION__
 
@@ -24,6 +24,10 @@ __all__ = [
     "HTML",
     "HTMLResponse",
     "Element",
+    "PyQuery",
+    "WebScraperException",
+    "WebScraperNotFound",
+    "MaxRetries",
     "user_agent",
     "UserAgent",
     "URL",
@@ -31,7 +35,9 @@ __all__ = [
     "replace_urls",
     "ProxyManager",
     "ProxyRotate",
+    "ProxyParseError",
     "PROXY",
+    "logger",
     "LogConfig",
     "LOG_LEVEL",
     "__VERSION__",

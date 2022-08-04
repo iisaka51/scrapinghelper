@@ -10,7 +10,9 @@ from typing import Any, Optional, Union, NamedTuple
 import numpy as np
 import pandas as pd
 import requests
-from requests_html import HTML, HTMLResponse, Element
+from requests_html import (
+    HTML, HTMLResponse, Element, MaxRetries, PyQuery
+)
 import requests_html
 from .logging import logger, LogConfig
 from .url import URL
@@ -23,7 +25,7 @@ DEFAULT_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKi
 class WebScraperException(BaseException):
     pass
 
-class WebScraperCantFind(WebScraperException):
+class WebScraperNotFound(WebScraperException):
     pass
 
 class TAG_LINK(NamedTuple):
@@ -32,7 +34,10 @@ class TAG_LINK(NamedTuple):
 
 def user_agent(style=None):
     # style is always ignore. just for compatibility.
-    return useragent_manager.first_user_agent
+    try:
+        return useragent_manager.first_user_agent
+    except:
+        return DEFAULT_USER_AGENT
 
 def _gen_browser_args(
         proxy_server:Optional[str]=None
@@ -211,7 +216,7 @@ class Scraper(object):
             logger.disable(__name__)
 
     def get_random_user_agent(self) -> str:
-        return self.user_agent.get_random_user_agent
+        return self.user_agent.get_random_user_agent()
 
     def get_random_ipv4(self) ->str:
         MAX_IPV4 = ipaddress.IPv4Address._ALL_ONES  # 2 ** 32 - 1
