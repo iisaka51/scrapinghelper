@@ -3,7 +3,7 @@ from .scraper import (
     Scraper, TAG_LINK,
     HTMLSession, AsyncHTMLSession, HTML, HTMLResponse, Element, user_agent
 )
-from .user_agents import UserAgent
+from .user_agents import UserAgent, user_agent
 from .url import URL, remove_urls, replace_urls
 from .proxy import ProxyManager, PROXY, ProxyRotate
 from .logging import LogConfig, LOG_LEVEL

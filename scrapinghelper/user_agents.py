@@ -24,8 +24,6 @@ class UserAgent(object):
         """
 
         self.load_datafile(keep_user_agents, datapath)
-        self.user_agent_pool = cycle(self.user_agents.user_agent.to_list())
-        self.first_user_agent = next(self.user_agent_pool)
 
 
     def load_datafile(self,
@@ -57,6 +55,8 @@ class UserAgent(object):
             self.user_agents = df.copy()
 
         self.keep_user_agents = len(self.user_agents)
+        self.user_agent_pool = cycle(self.user_agents.user_agent.to_list())
+        self.first_user_agent = next(self.user_agent_pool)
 
     def get_random_user_agent(self) ->str:
         chosen_index = int(np.random.choice(self.keep_user_agents,

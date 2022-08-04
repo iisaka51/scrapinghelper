@@ -17,7 +17,6 @@ from .url import URL
 from .proxy import ProxyManager, ProxyRotate
 from .user_agents import UserAgent
 from .user_agents import user_agent as useragent_manager
-import snoop
 
 DEFAULT_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/603.3.8 (KHTML, like Gecko) Version/10.1.2 Safari/603.3.8'
 
@@ -43,20 +42,23 @@ def _gen_browser_args(
     browser_args = browser_args.split(' ')
 
     if proxy_server:
-        browser_args += ["--proxy-server='{}'".format(proxy_server) ]
+        browser_args += ["--proxy-server={}".format(proxy_server) ]
 
     return browser_args
 
-class HTMLSession(requests_html.HTMLSession):
+class HTMLSession(requests_html.BaseSession):
 
-    def __init__(self, **kwargs:Any):
+    def __init__(self,
+            proxy_server: Optional[str]=None,
+            **kwargs:Any
+        )->None:
         self._proxy_server = None
 
-        self.proxy_server = kwargs.pop('proxy_server', None)
+        if proxy_server:
+            self.proxy_server = proxy_server
 
-        if self.proxy_server:
-            browser_args = _gen_browser_args(self.proxy_server)
-            kwargs['browser_args'] = browser_args
+        browser_args = _gen_browser_args(proxy_server)
+        kwargs['browser_args'] = browser_args
 
         super().__init__(**kwargs)
 
@@ -78,19 +80,35 @@ class HTMLSession(requests_html.HTMLSession):
             self._browser = self.loop.run_until_complete(super().browser)
         return self._browser
 
+    def close(self):
+        """ If a browser was created close it first. """
+        if hasattr(self, "_browser"):
+            self.loop.run_until_complete(self._browser.close())
+        super().close()
 
-class AsyncHTMLSession(requests_html.AsyncHTMLSession):
+class AsyncHTMLSession(requests_html.BaseSession):
 
-    def __init__(self, **kwargs):
+    def __init__(self,
+            loop=None, workers=None,
+            mock_browser: bool = True,
+            proxy_server: Optional[str]=None,
+            *args:Any, **kwargs:Any
+        )-> None:
+        """ Set or create an event loop and a thread pool.
+
+            :param loop: Asyncio loop to use.
+            :param workers: Amount of threads to use for executing async calls.
+                If not pass it will default to the number of processors on the
+                machine, multiplied by 5. """
         self._proxy_server = None
 
-        self.proxy_server = kwargs.pop('proxy_server', None)
+        if proxy_server:
+            self.proxy_server = proxy_server
 
-        if self.proxy_server:
-            browser_args = _gen_browser_args(self.proxy_server)
-            kwargs['browser_args'] = browser_args
+        browser_args = _gen_browser_args(proxy_server)
+        kwargs['browser_args'] = browser_args
 
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def proxy_server(self):
@@ -100,6 +118,27 @@ class AsyncHTMLSession(requests_html.AsyncHTMLSession):
     def proxy_server(self, val):
         if self._proxy_server != val:
             self._proxy_server = val
+
+    def request(self, *args, **kwargs):
+        """ Partial original request func and run it in a thread. """
+        func = partial(super().request, *args, **kwargs)
+        return self.loop.run_in_executor(self.thread_pool, func)
+
+    async def close(self):
+        """ If a browser was created close it first. """
+        if hasattr(self, "_browser"):
+            await self._browser.close()
+        super().close()
+
+    def run(self, *coros):
+        """ Pass in all the coroutines you want to run, it will wrap each one
+            in a task, run it and wait for the result. Return a list with all
+            results, this is returned in the same order coros are passed in. """
+        tasks = [
+            asyncio.ensure_future(coro()) for coro in coros
+        ]
+        done, _ = self.loop.run_until_complete(asyncio.wait(tasks))
+        return [t.result() for t in done]
 
 
 class Scraper(object):

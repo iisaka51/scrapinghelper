@@ -1,6 +1,26 @@
 # ScrapingHelper
 
-## How to use
+This library intends to make parsing HTML with using request_html.
+So, When using this library you automatically get (same as request_html):
+
+- **Full JavaScript support**!
+- *CSS Selectors* (a.k.a jQuery-style, thanks to PyQuery).
+- *XPath Selectors*, for the faint of heart.
+- Mocked user-agent (like a real web browser).
+- Automatic following of redirects.
+- Connection– pooling and cookie persistence.
+- The Requests experience you know and love, with magical parsing abilities.
+- **Async Support**
+
+And new features.
+
+- URL / PROXY parser with validator.
+- UserAgent manager using collected real user-agents.
+- proxy rotation suppport.
+- shell environment options.
+- logging support.
+
+## Tutorlas and Usage
 
 ### class URL
 
@@ -96,9 +116,18 @@ Out[21]: 'https://ja.wikipedia.org/wiki/日本語'
 
 ```
 
+### class UserAgent
+
+ - load_datafile(keep_user_agents: int=50, datapath: Optional[str]=None)
+ - get_random_user_agent()
+ - get_next_user_agent()
+
+ attributes
+ - first_user_agent
+
 ### class Scraper
 
- -  get_random_user_agent()
+ -  get_random_user_agent()  pass to UserAgent.get_random_user_agent()
  -  get_random_ipv4()
  -  get_random_ipv6()
  -  request()
