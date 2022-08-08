@@ -266,7 +266,7 @@ if passed `render=False`, `request()` skip call `render()`.
 `render()` of requests-html does not work with proxy.
 scrapinghelper support `render()` with proxy.
 
-```
+```python
 In [2]: # %load examples/check_ipaddress.py
    ...: from scrapinghelper import Scraper, ProxyManager, ProxyRotate
    ...:
@@ -310,7 +310,7 @@ Get public proxies list from url.
 default is [github.com/hookzof](https://raw.githubusercontent.com/hookzof/socks5_list/master/proxy.txt).
 Please keep in mind, there proxies are ABSOLUTELY NO WARRANTY.
 
-```
+```python
 In [1]: from scrapinghelper import ProxyManager, PROXY
 
 In [2]: pm = ProxyManager()
@@ -363,13 +363,13 @@ In [12]:
 
 you can filename as url. i.e.:
 
-```
+```python
 p = ProxyManager('file://./myproxy_list.txt')
 ```
 
 there uri expand as follows.
 
-```
+```python
         if proxies_url.startswith('file://.'):
             proxies_url = proxies_url.replace('file://.','')
             this_directory = Path(__file__).parent
@@ -382,10 +382,47 @@ there uri expand as follows.
 
 
 ## KNOWN PROBLEM
-if you want to use this module(and/or requests_html, selenium) on ubuntu of VPN,you should try follows commands.
+if you want to use this module(and/or requests_html, selenium) on ubuntu, you should add system libraries. try folloings.
 
 ```bash
 sudo apt install -y gconf-service libasound2 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgcc1 libgconf-2-4 libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libnspr4 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 ca-certificates fonts-liberation libappindicator1 libnss3 lsb-release xdg-utils wget
 ```
 
 See Also: https://techoverflow.net/2020/09/29/how-to-fix-pyppeteer-pyppeteer-errors-browsererror-browser-closed-unexpectedly/
+
+## BONOUS
+
+utilities for string manupulate helper functions.
+
+```python
+In [1]: from scrapinghelper.utils import StrCase
+
+In [2]: c = StrCase()
+
+In [3]: c.show_supported_case()
+Out[3]:
+{'case': 'sample',
+ 'snake': 'convert_case',
+ 'kebab': 'convert-case',
+ 'camel': 'convertCase',
+ 'pascal': 'ConvertCase',
+ 'const': 'CONVERT_CASE',
+ 'sentence': 'Convert case',
+ 'title': 'Convert Case',
+ 'lower': 'convert case',
+ 'upper': 'CONVERT CASE'}
+
+In [4]: c.convert_case('The sky is the limits', 'sentence')
+Out[4]: 'The sky is the limits'
+
+In [5]: c.convert_case('The sky is the limits')
+Out[5]: 'the_sky_is_the_limits'
+
+In [6]: c.convert_case('The sky is the limits', 'const')
+Out[6]: 'THE_SKY_IS_THE_LIMITS'
+
+In [7]: c.convert_case(['Good Morning','Thank you'], 'camel')
+Out[7]: ['goodMorning', 'thankYou']
+
+In [8]:
+```

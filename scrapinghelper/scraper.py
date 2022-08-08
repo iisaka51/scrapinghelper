@@ -421,8 +421,10 @@ class Scraper(object):
 
     def get_filename(self,
         url: Union[URL, str],
-        replace: Optional[Union[list,tuple]]=None,
+        replace: dict={},
         )-> bool:
+        """ extract filename from URL, and convert filename if necessary """
+
         if hasattr(url, 'is_valid') and url.is_valid:
             filename = url.basename
         else:
@@ -432,7 +434,8 @@ class Scraper(object):
                 filename = None
 
         if filename and replace:
-            filename = filename.replace( *replace )
+            replace_map = ((old, new) for old, new in replace.items())
+            filename = filename.replace( *replace_map )
 
         return filename
 
@@ -485,27 +488,3 @@ class Scraper(object):
             return True
         except:
             raise WebScraperException('download failed')
-
-    def omit_chars(self,
-        values: list,
-        omits: list,
-        )-> list:
-            omit_map = ((x, '') for x in omits)
-            for n in range(len(values)):
-                values[n] = values[n].replace(*omit_map)
-            return values
-
-    def add_df(self,
-            values: list,
-            columns: list,
-            omits: list=[]
-        ) ->pd.DataFrame:
-
-            if omits:
-                values = self.omit_chars(values,omits)
-                columns = self.omit_chars(columns,omits)
-
-            # Since Pandas 1.3.0
-            df = pd.DataFrame(values,index=columns)._maybe_depup_names(columns)
-            self.df = pd.concat([self.df,df.T])
-
