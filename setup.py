@@ -29,6 +29,10 @@ setup(
     version=get_version('scrapinghelper/versions.py'),
     license="MIT",
     install_requirements=requirements,
+    extras_require={
+        "socks": ["PySocks>=1.5.6, !=1.5.7"],
+        "converter": [ "multimethod>=1.8" ],
+    }
     author="Goichi (Iisaka) Yukawa",
     author_email="iisaka51@gmail.com",
     url="https://github.com/iisaka51/scrapinghelper",

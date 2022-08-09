@@ -1,8 +1,8 @@
 import re
-from typing import Any, Dict, Union
+from typing import Any, Dict, Union, Optional
 import numpy as np
 import pandas as pd
-from functools import singledispatch
+from multimethod import multidispatch, multimethod
 from .singledispatchmethod import singledispatchmethod
 from unicodedata import normalize
 
@@ -50,78 +50,159 @@ def is_alnum(word: str)-> bool:
     except:
         return False
 
-# singledispatch can regist for only first arguments.
 
-@singledispatch
-def replace_values( *arg: Any, **kwargs: Any) ->Any:
+@multidispatch
+def replace_values( obj: Any, *arg: Any, **kwargs: Any) ->Any:
     """dispatch function replace_values """
-    raise TypeError('Unsupport Type')
+    if obj:
+        return obj
 
-@replace_values.register
+@replace_values.register(list, dict)
 def _replace_values_multi(
-        replace: dict,
         values: list,
+        replace: dict,
+        *,
         ignore_case: bool=False,
-    )-> list:
-        flags = [ re.UNICODE, ( re.IGNORECASE + re.UNICODE) ]
+        inplace: bool=False,
+        **kwargs: Any,
+    )-> Optional[list]:
 
+        if not inplace:
+            values = values.copy()
+
+        flags = [ re.UNICODE, ( re.IGNORECASE + re.UNICODE) ]
         for n in range(len(values)):
             for old, new in replace.items():
                 values[n] = re.sub(old, new,  values[n],
                                    flags = flags[ignore_case])
-        return values
+        if not inplace:
+            return values
 
-@replace_values.register
+import snoop
+@replace_values.register(dict, dict)
+@snoop
+def _replace_values_dict_multi(
+        values: dict,
+        replace: dict,
+        *,
+        ignore_case: bool=False,
+        inplace: bool=False,
+        replace_key: bool=False,
+        replace_value: bool=True,
+    )-> Optional[list]:
+        """replace values of dict
+           set old and new values set to `replace`.
+           If replace_key set `True`, replace 'key' of dict.
+           default is `False`
+           If replace_value set `True`, replace 'value' of dict.
+           default is `True`
+        """
+
+        if not inplace:
+            values = values.copy()
+
+        if replace_key:
+            work_dict = values
+            for old, new in replace.items():
+                work_dict = dict( ( replace_values(key, [old], new,
+                                            ignore_case=ignore_case) , val)
+                                    for (key, val) in work_dict.items()
+            )
+            if inplace:
+                values.update(work_dict)
+            else:
+                values = work_dict
+
+        if replace_value:
+            work_dict = values
+            for old, new in replace.items():
+                work_dict = dict( ( key, replace_values(val, [old], new,
+                                                 ignore_case=ignore_case) )
+                                   for (key, val) in work_dict.items()
+            )
+            if inplace:
+                values.update(work_dict)
+            else:
+                values = work_dict
+
+        if not inplace:
+            return values
+
+
+@replace_values.register(list, list, str)
 def _replace_values_single(
+        values: list,
         replace_from: list,
         replace_to: str,
-        values: Union[list, str],
+        *,
         ignore_case: bool=False,
-    )-> list:
+        inplace: bool=False,
+        **kwargs: Any,
+    )-> Optional[list]:
 
-        if isinstance(values, str):
-            as_str = True
-            values = [values]
-        else:
-            as_str = False
+        if not inplace:
+            values = values.copy()
 
         flags = [ re.UNICODE, ( re.IGNORECASE + re.UNICODE) ]
         for n in range(len(values)):
             for old in replace_from:
                 values[n] = re.sub( old, replace_to, values[n],
                                    flags = flags[ignore_case])
-        if as_str:
-            return values[0]
-        else:
+        if not inplace:
             return values
 
-@singledispatch
-def omit_values( *arg: Any, **kwargs) ->Any:
-    """dispatch function omit_values """
-    raise TypeError('Unsupport Type')
+@replace_values.register(str, list, str)
+def _replace_values_text(
+        values: str,
+        replace_from: list,
+        replace_to: str,
+        *,
+        ignore_case: bool=False,
+        **kwargs: Any,
+    )-> str:
 
-@omit_values.register
-def _omit_values_muti(
+        flags = [ re.UNICODE, ( re.IGNORECASE + re.UNICODE) ]
+        for old in replace_from:
+            values = re.sub( old, replace_to, values,
+                             flags = flags[ignore_case])
+        return values
+
+
+@multidispatch
+def omit_values( obj: Any, *arg: Any, **kwargs: Any) ->Any:
+    """dispatch function replace_values """
+    if obj:
+        return obj
+
+@omit_values.register(list, list)
+def _omit_values_multi(
         values: list,
         omits: list,
+        *,
+        inplace: bool=False,
         ignore_case: bool=False,
         drop: bool=False
     )-> list:
-        values =  _replace_values_single(omits, '', values,
-                      ignore_case=ignore_case)
+        if not inplace:
+            values = values.copy()
+
+        values =  replace_values(values, omits, '', ignore_case=ignore_case)
         if drop:
             count = values.count('')
             for _ in range(count):
                 values.remove('')
-        return values
 
-@omit_values.register
-def _omit_values_str(
+        if not inplace:
+            return values
+
+@omit_values.register(str, list)
+def omit_values_single(
         values: str,
         omits: list,
+        *,
         ignore_case: bool=False,
-    )-> list:
-        return _replace_values_single(omits, '', values)
+    )-> str:
+        return replace_values(values, omits, '', ignore_case=ignore_case)
 
 
 def add_df(
@@ -250,34 +331,8 @@ class StrCase(object):
         """ dispatch function """
         raise TypeError('Unsupport Type')
 
-    @convert_case.register(type(None))
-    def _conver_case_none(self,
-            obj: type(None),
-            *args: Any,
-            **kwargs: Any
-        ):
-        """ Catch NULL values and return it"""
-        return obj
 
-    @convert_case.register( type(np.nan))
-    def _conver_case_npnan(self,
-            obj: type(np.nan),
-            *args: Any,
-            **kwargs: Any
-        ) -> np.nan:
-        """ Catch NULL values and return it"""
-        return obj
-
-    @convert_case.register( type(pd.NA))
-    def _conver_case_pdna(self,
-            obj: type(pd.NA),
-            *args: Any,
-            **kwargs: Any
-        ) -> pd.NA:
-        """ Catch NULL values and return it"""
-        return obj
-
-    @convert_case.register(str)
+    @convert_case.register
     def _convert_case_str(self,
             obj: str,
             case: str='snake',
@@ -310,6 +365,7 @@ class StrCase(object):
 
         if obj in self.__NULL_VALUES:
             na_values = na_values or "" if isinstance(obj, str) else "NaN"
+            return na_values
 
         if case in self.__supported_case:
             words = self.__supported_case[ case ]['splitor'](obj)
@@ -318,7 +374,7 @@ class StrCase(object):
         return string
 
 
-    @convert_case.register(list)
+    @convert_case.register
     def _convert_case_list(self,
             obj: list,
             case: str='snake',
@@ -330,6 +386,15 @@ class StrCase(object):
 
         return [ self.convert_case(x, case, na_values) for x in obj ]
 
+    @convert_case.register
+    def _convert_case_obj(self,
+            val: object,
+            *args: Any,
+            **kwargs: Any
+        ) -> Any:
+            return val
+
+
     def replace_values(self, string: Any, mapping: Dict[str, str]) -> Any:
         """Replace string values in string.
 
@@ -340,7 +405,7 @@ class StrCase(object):
         mapping
             Maps old values in the string to the new string.
         """
-        if string in NULL_VALUES:
+        if string in self.__NULL_VALUES:
             return string
 
         string = str(string)
