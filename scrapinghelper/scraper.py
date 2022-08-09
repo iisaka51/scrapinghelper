@@ -419,6 +419,8 @@ class Scraper(object):
 
         return links
 
+    import snoop
+    @snoop
     def get_filename(self,
         url: Union[URL, str],
         replace: dict={},
@@ -434,8 +436,8 @@ class Scraper(object):
                 filename = None
 
         if filename and replace:
-            replace_map = ((old, new) for old, new in replace.items())
-            filename = filename.replace( *replace_map )
+            [filename := filename.replace(old, new)
+                        for old, new in replace.items()]
 
         return filename
 

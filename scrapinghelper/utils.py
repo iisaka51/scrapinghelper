@@ -3,7 +3,6 @@ from typing import Any, Dict, Union, Optional
 import numpy as np
 import pandas as pd
 from multimethod import multidispatch, multimethod
-from .singledispatchmethod import singledispatchmethod
 from unicodedata import normalize
 
 __all__ = {
@@ -78,9 +77,7 @@ def _replace_values_multi(
         if not inplace:
             return values
 
-import snoop
 @replace_values.register(dict, dict)
-@snoop
 def _replace_values_dict_multi(
         values: dict,
         replace: dict,
@@ -326,11 +323,10 @@ class StrCase(object):
             r"\1", string)
         ).split()
 
-    @singledispatchmethod
-    def convert_case(self, *args: Any, **kwargs: Any) -> Any:
+    @multimethod
+    def convert_case(self, obj: Any, *args: Any, **kwargs: Any) -> Any:
         """ dispatch function """
-        raise TypeError('Unsupport Type')
-
+        return obj
 
     @convert_case.register
     def _convert_case_str(self,
@@ -385,14 +381,6 @@ class StrCase(object):
         """Convert case style for list of obj."""
 
         return [ self.convert_case(x, case, na_values) for x in obj ]
-
-    @convert_case.register
-    def _convert_case_obj(self,
-            val: object,
-            *args: Any,
-            **kwargs: Any
-        ) -> Any:
-            return val
 
 
     def replace_values(self, string: Any, mapping: Dict[str, str]) -> Any:
