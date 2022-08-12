@@ -21,7 +21,7 @@ And new features.
 - shell environment options.
 - logging support.
 
-## Tutorlas and Usage
+## Tutorial and Usage
 
 ### class URL
 
