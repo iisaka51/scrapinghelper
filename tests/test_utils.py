@@ -257,7 +257,7 @@ class TestClass:
         replace_values( data, replace, inplace=True)
         assert data == expect
 
-    def test_replace_values_dict_val(self):
+    def test_replace_values_dict_val_default(self):
         data = { 1: 'January', 2: 'February', 3: 'March', 4: 'April',
                  5: 'May', 6: 'June', 7: 'July', 8: 'August',
                 9: 'September', 10: 'October', 11: 'November', 12: 'December'}
@@ -269,6 +269,34 @@ class TestClass:
                 9: 'september', 10: 'October', 11: 'November', 12: 'December'}
 
         result = replace_values( data, replace )
+        assert result == expect
+
+    def test_replace_values_dict_val_explicit(self):
+        data = { 1: 'January', 2: 'February', 3: 'March', 4: 'April',
+                 5: 'May', 6: 'June', 7: 'July', 8: 'August',
+                9: 'September', 10: 'October', 11: 'November', 12: 'December'}
+
+        replace = {'April': 'april', 'September': 'september' }
+
+        expect = { 1: 'January', 2: 'February', 3: 'March', 4: 'april',
+                 5: 'May', 6: 'June', 7: 'July', 8: 'August',
+                9: 'september', 10: 'October', 11: 'November', 12: 'December'}
+
+        result = replace_values( data, replace, replace_for='value' )
+        assert result == expect
+
+    def test_replace_values_dict_val_ignore_case(self):
+        data = { 1: 'January', 2: 'February', 3: 'March', 4: 'April',
+                 5: 'May', 6: 'June', 7: 'July', 8: 'August',
+                9: 'September', 10: 'October', 11: 'November', 12: 'December'}
+
+        replace = {'APRIL': 'april', 'SEPTEMBER': 'september' }
+
+        expect = { 1: 'January', 2: 'February', 3: 'March', 4: 'april',
+                 5: 'May', 6: 'June', 7: 'July', 8: 'August',
+                9: 'september', 10: 'October', 11: 'November', 12: 'December'}
+
+        result = replace_values( data, replace, ignore_case=True )
         assert result == expect
 
     def test_replace_values_dict_inplace(self):
@@ -285,55 +313,23 @@ class TestClass:
         replace_values( data, replace, inplace=True )
         assert data == expect
 
-    def test_replace_values_dict_val_ignore_case(self):
-        data = { 1: 'January', 2: 'February', 3: 'March', 4: 'April',
-                 5: 'May', 6: 'June', 7: 'July', 8: 'August',
-                9: 'September', 10: 'October', 11: 'November', 12: 'December'}
+    def test_replace_values_dict_keys(self):
+        data = { 1: 'one', 2: 'two', 3: 'three', 4: 'four' }
 
-        replace = {'april': 'april', 'september': 'september' }
+        replace = {1: 'one',  2: 'two', 3: 'three'}
 
-        expect = { 1: 'January', 2: 'February', 3: 'March', 4: 'april',
-                 5: 'May', 6: 'June', 7: 'July', 8: 'August',
-                9: 'september', 10: 'October', 11: 'November', 12: 'December'}
+        expect = { 'one': 'one', 'two': 'two', 'three': 'three', 4: 'four' }
 
-        result = replace_values( data, replace, ignore_case=True )
+        result = replace_values( data, replace, replace_for='key')
         assert result == expect
 
-    def test_replace_values_dict_key(self):
-        data = { 'January': 'January', 'February': 'February',
-                 'March': 'March', 'April': 'April', 'May': 'May',
-                 'June': 'June', 'July': 'July', 'August': 'August',
-                 'September': 'September', 'Octorber': 'October',
-                 'November': 'November', 'December': 'December'}
+    def test_replace_values_dict_val_obj(self):
+        data = { 1: 'one', 2: 'two', 3: 'three', 4: 'four' }
 
-        replace = {'April': 'april', 'September': 'september' }
+        replace = {'one': 1, 'two': [2, 'two'], 'three': { 3: 'three'}}
 
-        expect = { 'January': 'January', 'February': 'February',
-                 'March': 'March', 'april': 'April', 'May': 'May',
-                 'June': 'June', 'July': 'July', 'August': 'August',
-                 'september': 'September', 'Octorber': 'October',
-                 'November': 'November', 'December': 'December'}
+        expect = { 1: 1, 2: [2, 'two'] , 3: {3: 'three'}, 4: 'four' }
 
-        result = replace_values( data, replace,
-                                   replace_key=True, replace_value=False )
-        assert result == expect
-
-    def test_replace_values_dict_key_val(self):
-        data = { 'January': 'January', 'February': 'February',
-                 'March': 'March', 'April': 'April', 'May': 'May',
-                 'June': 'June', 'July': 'July', 'August': 'August',
-                 'September': 'September', 'Octorber': 'October',
-                 'November': 'November', 'December': 'December'}
-
-        replace = {'April': 'april', 'September': 'september' }
-
-        expect = { 'January': 'January', 'February': 'February',
-                 'March': 'March', 'april': 'april', 'May': 'May',
-                 'June': 'June', 'July': 'July', 'August': 'August',
-                 'september': 'september', 'Octorber': 'October',
-                 'November': 'November', 'December': 'December'}
-
-        result = replace_values( data, replace,
-                                   replace_key=True, replace_value=True )
+        result = replace_values( data, replace )
         assert result == expect
 

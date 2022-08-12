@@ -419,8 +419,6 @@ class Scraper(object):
 
         return links
 
-    import snoop
-    @snoop
     def get_filename(self,
         url: Union[URL, str],
         replace: dict={},

@@ -1,18 +1,77 @@
 import re
-from typing import Any, Dict, Union, Optional
+from typing import Any, Dict, Union, Optional, Hashable, Literal, get_args
 import numpy as np
 import pandas as pd
 from multimethod import multidispatch, multimethod
 from unicodedata import normalize
+from collections import OrderedDict
+from enum import Enum
+
+class ReplaceFor(str, Enum):
+  KEY = "key"
+  VALUE = "value"
+
+ReplaceForType = Literal[ReplaceFor.KEY, ReplaceFor.VALUE]
+
+class uDict(dict):
+    def __missing__(self, key):
+        return None
+
+    def __hash__(self):
+        return hash(tuple(sorted(self.items())))
+
+    def replace_key(self, old, new):
+        self.replace_key_map({old: new})
+
+    def replace_key_map(self, replace):
+        new_dict = {}
+        for key, value in list(self.items()):
+            new_dict[replace.get(key, key)] = self[key]
+        self.update(new_dict)
+
+    def fromkeys(self, S, v):
+        return type(self)(dict(self).fromkeys(S, v))
+
+class iDict(dict):
+    def __missing__(self, key):
+        return None
+
+    def __setitem__(self, key, value):
+        raise TypeError(
+            r"{} object does not support item assignment"
+            .format(type(self).__name__) )
+
+    def __delitem__(self, key):
+        raise TypeError(
+            r"{} object does not support item deletion"
+            .format(type(self).__name__) )
+
+    def __getattribute__(self, attribute):
+        if attribute in ('clear', 'update', 'pop', 'popitem', 'setdefault'):
+            raise AttributeError(
+                r"{} object has no attribute {}"
+                .format(type(self).__name__, attribute) )
+        return dict.__getattribute__(self, attribute)
+
+    def __hash__(self):
+        return hash(tuple(sorted(self.items())))
+
+    def fromkeys(self, S, v):
+        return type(self)(dict(self).fromkeys(S, v))
+
 
 __all__ = {
-    "StrVal",
+    "StrCase",
     "is_alpha",
     "is_alnum",
     "omit_values",
     "replace_values",
     "add_df",
-    "df_compare"
+    "df_compare",
+    "ReplaceFor",
+    "ReplaceForType",
+    "uDict",
+    "iDict",
 }
 
 def is_alpha(word: str)-> bool:
@@ -34,20 +93,107 @@ def is_alpha(word: str)-> bool:
 
 def is_alnum(word: str)-> bool:
     """ Check word is alphabet and digits.
-    Parameters
-    ----------
-    word: str
+    :param word: str
         any string
 
-    Returns
-    -------
-    validate result: bool
+    "returns:  validate result
         if all characters of word, return ``True`` otherwise return ``False``
     """
     try:
         return word.encode('ascii').isalnum()
     except:
         return False
+
+@multidispatch
+def ordereddict_to_dict( obj: Any) -> dict:
+    raise TypeError("Unsupported type.")
+
+@ordereddict_to_dict.register(str)
+def _ordereddict_to_dict(obj: str):
+    return obj
+
+@ordereddict_to_dict.register(Union[int, float])
+def _ordereddict_to_dict(obj: Union[int, float]) ->Union[int, float]:
+    return obj
+
+@ordereddict_to_dict.register(dict)
+def _ordereddict_to_dict(obj: dict) ->dict:
+    return {k: ordereddict_to_dict(v) for k, v in obj.items()}
+
+@ordereddict_to_dict.register(OrderedDict)
+def _ordereddict_to_dict(obj: OrderedDict) ->dict:
+    return dict(obj)
+
+@ordereddict_to_dict.register(Union[list, tuple])
+def _ordereddict_to_dict(obj: Union[list, tuple]) ->list:
+    return [ordereddict_to_dict(e) for e in obj]
+
+@multidispatch
+def change_dict_keys( *args: Any, **kwargs: Any):
+    raise TypeError("Invaid Type.")
+
+@change_dict_keys.register(dict, Hashable, Hashable)
+def _change_dict_keys_single(
+    data: dict,
+    old: Hashable,
+    new: Hashable,
+    inplace: bool=False,
+    ) -> dict:
+    """Change dict key.
+    Parameters
+    ----------
+    data: dict
+         old dict
+    old: Hashable
+         old key
+    new: Hashable
+         new key
+    inplace: bool
+        Whether to perform the operation in place on the data. default False.
+    Returns
+    -------
+    new dict: dict
+    """
+
+    if not inplace:
+        data = data.copy()
+
+    workdict = {}
+    replace={old:new}
+    for key,val in data.items():
+        data[replace.get(key,key)] = data.pop(key)
+
+    if not inplace:
+        return data
+
+@change_dict_keys.register(dict, dict)
+def _change_dict_keys_multi(
+        data: dict,
+        replace: dict,
+        inplace: bool=False,
+    ) -> dict:
+    """Change dict key using dict.
+    Parameters
+    ----------
+    d: dict
+         old dict
+    replace: dict {old_key: new_key,...}
+        replace keymap as dict.
+    inplace: bool
+        Whether to perform the operation in place on the data. default False.
+    Returns
+    -------
+    new dict: dict
+    """
+
+    if not inplace:
+        data = data.copy()
+
+    for key, value in list(data.items()):
+        data[replace.get(key, key)] = data.pop(key)
+
+    if not inplace:
+        return data
 
 
 @multidispatch
@@ -84,50 +230,60 @@ def _replace_values_dict_multi(
         *,
         ignore_case: bool=False,
         inplace: bool=False,
-        replace_key: bool=False,
-        replace_value: bool=True,
+        replace_for: ReplaceForType = ReplaceFor.VALUE
     )-> Optional[list]:
         """replace values of dict
-           set old and new values set to `replace`.
-           If replace_key set `True`, replace 'key' of dict.
-           default is `False`
-           If replace_value set `True`, replace 'value' of dict.
-           default is `True`
+        Parameters
+        ----------
+        values: dict
+           to replace data
+        replace: dict
+           replace map. { old: new,....}
+        replace_for: avaiable 'key', 'value'.
+           If replace_for set 'value', replace 'value' of dict.
+           If replace_value set 'key', replace 'key' of dict.
+           default is 'value'
         """
+        if replace_for not in get_args(ReplaceForType):
+            raise ValueError("replace_for must be 'key' or 'value'.")
 
-        if not inplace:
-            values = values.copy()
+        if replace_for == ReplaceFor.KEY:
+            mapper={}
+            for key, value in list(values.items()):
+                for old, new in replace.items():
+                    new_key = replace_values(key, [old], new,
+                                             ignore_case=ignore_case)
+                    if new == new_key:
+                        mapper[key] = new_key
 
-        if replace_key:
-            work_dict = values
-            for old, new in replace.items():
-                work_dict = dict( ( replace_values(key, [old], new,
-                                            ignore_case=ignore_case) , val)
-                                    for (key, val) in work_dict.items()
-            )
-            if inplace:
-                values.update(work_dict)
-            else:
-                values = work_dict
+            workdict = values.copy()
+            for key, value in list(workdict.items()):
+                workdict[mapper.get(key, key)] = workdict.pop(key)
 
-        if replace_value:
-            work_dict = values
-            for old, new in replace.items():
-                work_dict = dict( ( key, replace_values(val, [old], new,
-                                                 ignore_case=ignore_case) )
-                                   for (key, val) in work_dict.items()
-            )
-            if inplace:
-                values.update(work_dict)
-            else:
-                values = work_dict
+        if replace_for == ReplaceFor.VALUE:
+            workdict = values.copy()
+            mapper={}
+            for key, value in list(workdict.items()):
+                for old, new in replace.items():
+                    if isinstance(value, str) and ignore_case:
+                        new_val = replace_values(value, [old], new,
+                                         ignore_case=ignore_case)
+                        if new == new_val:
+                            mapper[value] = new_val
+                    else:
+                        if value == old:
+                            mapper[value] = new
 
-        if not inplace:
-            return values
+            for key, value in list(workdict.items()):
+                workdict[key] = mapper.get(value, workdict.pop(key))
 
+        if inplace:
+            values.update(workdict)
+        else:
+            return workdict
 
 @replace_values.register(list, list, str)
-def _replace_values_single(
+def _replace_values_single_str(
         values: list,
         replace_from: list,
         replace_to: str,
@@ -148,21 +304,61 @@ def _replace_values_single(
         if not inplace:
             return values
 
-@replace_values.register(str, list, str)
+@replace_values.register(list, list, Any)
+def _replace_values_single_obj(
+        values: list,
+        replace_from: list,
+        replace_to: Any,
+        *,
+        ignore_case: bool=False,
+        inplace: bool=False,
+        **kwargs: Any,
+    )-> Optional[list]:
+
+        if not inplace:
+            values = values.copy()
+
+        for n in range(len(values)):
+            for old in replace_from:
+                if values[n] ==  old:
+                    values[n] = new
+
+        if not inplace:
+            return values
+
+
+@replace_values.register(str, list, Hashable)
 def _replace_values_text(
         values: str,
         replace_from: list,
-        replace_to: str,
+        replace_to: Hashable,
         *,
         ignore_case: bool=False,
         **kwargs: Any,
-    )-> str:
+    )-> Hashable:
 
         flags = [ re.UNICODE, ( re.IGNORECASE + re.UNICODE) ]
         for old in replace_from:
-            values = re.sub( old, replace_to, values,
+            if isinstance(old, str) and isinstance(replace_to, str):
+                values = re.sub( old, replace_to, values,
                              flags = flags[ignore_case])
+            elif old == origin:
+                values = replace_to
+
         return values
+
+
+@replace_values.register(Union[int, float], list, Any)
+def _replace_values_number(
+        values: Union[int, float],
+        replace_from: list,
+        replace_to: Any,
+        **kwargs: Any,
+    )-> str:
+        if values in replace_from:
+            return replace_to
+        else:
+            return values
 
 
 @multidispatch
