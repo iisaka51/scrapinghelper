@@ -146,14 +146,14 @@ def url_validator(value, public=False):
 
 def remove_urls(
         text: str,
-        end_with: str ='',
+        endswith: str ='',
     ) -> str:
     """ Remove any url in the text.
     Parameters
     ----------
         text: str
              The text to remove urls.
-        end_with: str
+        endswith: str
              If set, only remove the URLs that finish with that
              regular expression.
              default is all the URLs are remvoed.
@@ -162,12 +162,12 @@ def remove_urls(
         removed_text: str
             The same text but without urls.
     """
-    return replace_urls(text, '', end_with)
+    return replace_urls(text, '', endswith)
 
 def replace_urls(
         text: str,
         replace: str,
-        end_with: str = '',
+        endswith: str = '',
     ) -> str:
     """ Replace all the URLs with path by a text.
     Patameters
@@ -176,7 +176,7 @@ def replace_urls(
             The text to replace.
         replace: str
             The text to replace with.
-        end_with: str
+        endswith: str
             A regular expression which the URL has to finish with.
             default is replace all the URLs.
     Returns
@@ -186,7 +186,7 @@ def replace_urls(
     ----------
         This function is not perfect.
     """
-    pattern = re.compile( URL_PATTERN + end_with, re.UNICODE | re.IGNORECASE)
+    pattern = re.compile( URL_PATTERN + endswith, re.UNICODE | re.IGNORECASE)
     matches = list(re.finditer(pattern, text))
     matches.reverse()
     for match in matches:
