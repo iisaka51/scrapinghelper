@@ -7,6 +7,22 @@ from unicodedata import normalize
 from collections import OrderedDict
 from enum import Enum
 
+__all__ = [
+    "uDict",
+    "iDict",
+    "StrCase",
+    "is_alpha",
+    "is_alnum",
+    "ordereddict_to_dict",
+    "change_dict_keys",
+    "omit_values",
+    "replace_values",
+    "add_df",
+    "df_compare",
+    "ReplaceFor",
+    "ReplaceForType",
+]
+
 class ReplaceFor(str, Enum):
   KEY = "key"
   VALUE = "value"
@@ -58,21 +74,6 @@ class iDict(dict):
 
     def fromkeys(self, S, v):
         return type(self)(dict(self).fromkeys(S, v))
-
-
-__all__ = {
-    "StrCase",
-    "is_alpha",
-    "is_alnum",
-    "omit_values",
-    "replace_values",
-    "add_df",
-    "df_compare",
-    "ReplaceFor",
-    "ReplaceForType",
-    "uDict",
-    "iDict",
-}
 
 def is_alpha(word: str)-> bool:
     """ Check word is alphabet.

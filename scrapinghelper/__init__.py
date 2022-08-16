@@ -6,7 +6,7 @@ from .scraper import (
 from .user_agents import UserAgent, user_agent
 from .url import URL, remove_urls, replace_urls
 from .proxy import ProxyManager, PROXY, ProxyRotate, ProxyParseError
-from .logging import LogConfig, LOG_LEVEL
+from .logging import logger, LogConfig, LOG_LEVEL
 from .versions import __VERSION__
 
 # Sanity checking.
