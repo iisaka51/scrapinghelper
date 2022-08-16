@@ -266,4 +266,4 @@ class TestClass:
         )
         assert replace_urls(src_data,
                             replace="JAPAN",
-                            end_with='.co.jp') == expect
+                            endswith='.co.jp') == expect

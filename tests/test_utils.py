@@ -231,6 +231,24 @@ class TestClass:
         result = replace_values( data, replace)
         assert result == expect
 
+    def convert_func(self, matchobj):
+        map = {'January': '1',
+               'February': '2' }
+        return map[matchobj.group(0)]
+
+    def test_replace_values_with_regexp(self):
+        data = ['January', 'February', 'March', 'April',
+                'May', 'June', 'July', 'August',
+                'September', 'October', 'November', 'December']
+
+        replace = { '.*ary': self.convert_func, '.*ber': 'BER' }
+
+        expect = ['1', '2', 'March', 'April',
+                'May', 'June', 'July', 'August',
+                'BER', 'BER', 'BER', 'BER']
+        result = replace_values( data, replace)
+        assert result == expect
+
     def test_replace_values_ignore_case(self):
         data = ['January', 'February', 'March', 'April',
                 'May', 'June', 'July', 'August',
