@@ -413,16 +413,11 @@ class TestClass:
         assert result == data
 
     def test_udict_case02(self):
-        expect = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
-        result = uDict(January=1, February=2, March=3, April=4)
-        assert result == expect
-
-    def test_udict_case03(self):
         data = uDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
         expect = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
         assert data == expect
 
-    def test_udict_case04(self):
+    def test_udict_case03(self):
         data = uDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
         expect = { 'January': 1, 'February': 2, 'March': 3, 'Apr': 4 }
         saved = data.copy()
@@ -430,7 +425,7 @@ class TestClass:
         assert ( result == expect
                  and data == saved )
 
-    def test_udict_case05(self):
+    def test_udict_case04(self):
         data = uDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
         replace = {'January': 'Jan', 'February': 'Feb' }
         expect = { 'Jan': 1, 'Feb': 2, 'March': 3, 'April': 4 }
@@ -439,7 +434,7 @@ class TestClass:
         assert ( result == expect
                  and data == saved )
 
-    def test_udict_case06(self):
+    def test_udict_case05(self):
         data = uDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
         replace = {'January': 'Jan', 'February': 'Feb' }
         expect = { 'Jan': 1, 'Feb': 2, 'March': 3, 'April': 4 }
@@ -448,7 +443,7 @@ class TestClass:
         assert ( data == expect
                  and data != saved )
 
-    def test_udict_case07(self):
+    def test_udict_case06(self):
         data = uDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
         with pytest.raises(TypeError) as e:
             result = dict({data: 1})
@@ -504,7 +499,7 @@ class TestClass:
         data = iDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
         assert hasattr(data, '__hash__') == True
 
-    def test_idict_case09(self):
+    def test_idict_case10(self):
         data = iDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
         result = dict({data: 1})
         assert  result[data]  == 1
