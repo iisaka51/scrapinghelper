@@ -41,7 +41,7 @@ class uDict(dict):
 
     def replace_key_map(self, replace):
         new_dict = {}
-        for key, value in list(self.items()):
+        for key in list(self.keys()):
             new_dict[replace.get(key, key)] = self[key]
         self.update(new_dict)
 
@@ -161,7 +161,7 @@ def _change_dict_keys_single(
 
     workdict = {}
     replace={old:new}
-    for key,val in data.items():
+    for key in list(data.keys()):
         data[replace.get(key,key)] = data.pop(key)
 
     if not inplace:
@@ -190,7 +190,7 @@ def _change_dict_keys_multi(
     if not inplace:
         data = data.copy()
 
-    for key, value in list(data.items()):
+    for key in list(data.keys()):
         data[replace.get(key, key)] = data.pop(key)
 
     if not inplace:

@@ -4,7 +4,7 @@ sys.path.insert(0,"../scrapinghelper")
 
 from scrapinghelper.utils import (
     StrCase, is_alpha, is_alnum, omit_values, replace_values,
-    add_df, df_compare
+    add_df, df_compare, change_dict_keys
 )
 from pprint import pprint
 from pathlib import Path
@@ -320,13 +320,13 @@ class TestClass:
     def test_replace_values_dict_inplace(self):
         data = { 1: 'January', 2: 'February', 3: 'March', 4: 'April',
                  5: 'May', 6: 'June', 7: 'July', 8: 'August',
-                9: 'September', 10: 'October', 11: 'November', 12: 'December'}
+                 9: 'September', 10: 'October', 11: 'November', 12: 'December'}
 
         replace = {'April': 'april', 'September': 'september' }
 
         expect = { 1: 'January', 2: 'February', 3: 'March', 4: 'april',
                  5: 'May', 6: 'June', 7: 'July', 8: 'August',
-                9: 'september', 10: 'October', 11: 'November', 12: 'December'}
+                 9: 'september', 10: 'October', 11: 'November', 12: 'December'}
 
         replace_values( data, replace, inplace=True )
         assert data == expect
@@ -351,3 +351,56 @@ class TestClass:
         result = replace_values( data, replace )
         assert result == expect
 
+
+    def test_change_dict_keys_case01(self):
+        data = { 'January': 1, 'February': 2, 'March': 3, 'April': 4,
+                 'May': 5, 'June': 6, 'July': 7, 'August': 8,
+                 'September': 9, 'October': 10, 'November': 11, 'December': 12}
+        replace = {'April': 4, 'September': 9 }
+        expect = { 'January': 1, 'February': 2, 'March': 3, 4: 4,
+                   'May': 5, 'June': 6, 'July': 7, 'August': 8,
+                 9: 9, 'October': 10, 'November': 11, 'December': 12}
+        result = change_dict_keys(data, replace)
+        assert result == expect
+
+    def test_change_dict_keys_case02(self):
+        data = { 'January': 1, 'February': 2, 'March': 3, 'April': 4,
+                 'May': 5, 'June': 6, 'July': 7, 'August': 8,
+                 'September': 9, 'October': 10, 'November': 11, 'December': 12}
+        replace = {'April': 4, 'September': 9 }
+        expect = { 'January': 1, 'February': 2, 'March': 3, 4: 4,
+                   'May': 5, 'June': 6, 'July': 7, 'August': 8,
+                 9: 9, 'October': 10, 'November': 11, 'December': 12}
+        change_dict_keys(data, replace, inplace=True)
+        assert data == expect
+
+    def test_change_dict_keys_case03(self):
+        data = { 1: 'January', 2: 'February', 3: 'March', 4: 'April',
+                 5: 'May', 6: 'June', 7: 'July', 8: 'August',
+                 9: 'September', 10: 'October', 11: 'November', 12: 'December'}
+        replace = {4: 'Apr', 7: 'Jul' }
+        expect = { 1: 'January', 2: 'February', 3: 'March', 'Apr': 'April',
+                 5: 'May', 6: 'June', 'Jul': 'July', 8: 'August',
+                 9: 'September', 10: 'October', 11: 'November', 12: 'December'}
+        result = change_dict_keys(data, replace)
+        assert result == expect
+
+    def test_change_dict_keys_case04(self):
+        data = { 'January': 1, 'February': 2, 'March': 3, 'April': 4,
+                 'May': 5, 'June': 6, 'July': 7, 'August': 8,
+                 'September': 9, 'October': 10, 'November': 11, 'December': 12}
+        expect = { 'January': 1, 'February': 2, 'March': 3, 'Apr': 4,
+                   'May': 5, 'June': 6, 'July': 7, 'August': 8,
+                 'September': 9, 'October': 10, 'November': 11, 'December': 12}
+        result = change_dict_keys(data, 'April', 'Apr')
+        assert result == expect
+
+    def test_change_dict_keys_case05(self):
+        data = { 'January': 1, 'February': 2, 'March': 3, 'April': 4,
+                 'May': 5, 'June': 6, 'July': 7, 'August': 8,
+                 'September': 9, 'October': 10, 'November': 11, 'December': 12}
+        expect = { 'January': 1, 'February': 2, 'March': 3, 'Apr': 4,
+                   'May': 5, 'June': 6, 'July': 7, 'August': 8,
+                 'September': 9, 'October': 10, 'November': 11, 'December': 12}
+        change_dict_keys(data, 'April', 'Apr', inplace=True)
+        assert data == expect
