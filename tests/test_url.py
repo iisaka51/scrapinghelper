@@ -243,7 +243,7 @@ class TestClass:
             "[Yahoo Japan]()\n"
             "Funny HooBar.\n"
         )
-        assert remove_urls(src_data, end_with=".co.jp") == expect
+        assert remove_urls(src_data, endswith=".co.jp") == expect
 
     def test_replace_urls(self):
         src_data=(

@@ -1,10 +1,11 @@
 import sys
+import pytest
 
 sys.path.insert(0,"../scrapinghelper")
 
 from scrapinghelper.utils import (
     StrCase, is_alpha, is_alnum, omit_values, replace_values,
-    add_df, df_compare, change_dict_keys
+    add_df, df_compare, change_dict_keys, uDict, iDict
 )
 from pprint import pprint
 from pathlib import Path
@@ -404,3 +405,106 @@ class TestClass:
                  'September': 9, 'October': 10, 'November': 11, 'December': 12}
         change_dict_keys(data, 'April', 'Apr', inplace=True)
         assert data == expect
+
+    def test_udict_case01(self):
+        data = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
+        expect = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
+        result = uDict(data)
+        assert result == data
+
+    def test_udict_case02(self):
+        expect = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
+        result = uDict(January=1, February=2, March=3, April=4)
+        assert result == expect
+
+    def test_udict_case03(self):
+        data = uDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
+        expect = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
+        assert data == expect
+
+    def test_udict_case04(self):
+        data = uDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
+        expect = { 'January': 1, 'February': 2, 'March': 3, 'Apr': 4 }
+        saved = data.copy()
+        result = data.replace_key('April', 'Apr')
+        assert ( result == expect
+                 and data == saved )
+
+    def test_udict_case05(self):
+        data = uDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
+        replace = {'January': 'Jan', 'February': 'Feb' }
+        expect = { 'Jan': 1, 'Feb': 2, 'March': 3, 'April': 4 }
+        saved = data.copy()
+        result = data.replace_key_map(replace)
+        assert ( result == expect
+                 and data == saved )
+
+    def test_udict_case06(self):
+        data = uDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
+        replace = {'January': 'Jan', 'February': 'Feb' }
+        expect = { 'Jan': 1, 'Feb': 2, 'March': 3, 'April': 4 }
+        saved = data.copy()
+        data.replace_key_map(replace, inplace=True)
+        assert ( data == expect
+                 and data != saved )
+
+    def test_udict_case07(self):
+        data = uDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
+        with pytest.raises(TypeError) as e:
+            result = dict({data: 1})
+        assert str(e.value) == "unhashable type: 'uDict'"
+
+    def test_idict_case01(self):
+        data = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
+        expect = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
+        result = iDict(data)
+        assert result == data
+
+    def test_idict_case02(self):
+        expect = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
+        result = iDict(January=1, February=2, March=3, April=4)
+        assert result == expect
+
+    def test_idict_case03(self):
+        data = iDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
+        expect = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
+        assert data == expect
+
+    def test_idict_case04(self):
+        data = iDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
+        with pytest.raises(TypeError) as e:
+            data['January'] = 'Jan'
+        assert str(e.value) == 'iDict object does not support item assignment'
+
+    def test_idict_case05(self):
+        data = iDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
+        with pytest.raises(AttributeError) as e:
+            result  = data.pop()
+        assert str(e.value) == 'iDict object has no attribute pop'
+
+    def test_idict_case06(self):
+        data = iDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
+        with pytest.raises(AttributeError) as e:
+            data.clear()
+        assert str(e.value) == 'iDict object has no attribute clear'
+
+    def test_idict_case07(self):
+        data = iDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
+        with pytest.raises(AttributeError) as e:
+            data.update({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
+        assert str(e.value) == 'iDict object has no attribute update'
+
+    def test_idict_case08(self):
+        data = iDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
+        with pytest.raises(AttributeError) as e:
+            data.setdefault('May', 5)
+        assert str(e.value) == 'iDict object has no attribute setdefault'
+
+    def test_idict_case09(self):
+        data = iDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
+        assert hasattr(data, '__hash__') == True
+
+    def test_idict_case09(self):
+        data = iDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
+        result = dict({data: 1})
+        assert  result[data]  == 1

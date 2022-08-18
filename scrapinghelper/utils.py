@@ -30,20 +30,29 @@ class ReplaceFor(str, Enum):
 ReplaceForType = Literal[ReplaceFor.KEY, ReplaceFor.VALUE]
 
 class uDict(dict):
+    __hash__ = None
+
     def __missing__(self, key):
         return None
 
-    def __hash__(self):
-        return hash(tuple(sorted(self.items())))
+    def replace_key(self, old, new, inplace=False):
+        result = self.replace_key_map({old: new}, inplace)
+        if not inplace:
+            return result
 
-    def replace_key(self, old, new):
-        self.replace_key_map({old: new})
+    def replace_key_map(self, replace, inplace=False):
+        if not inplace:
+            work_dict = self.copy()
+        else:
+            work_dict = self
 
-    def replace_key_map(self, replace):
-        new_dict = {}
         for key in list(self.keys()):
-            new_dict[replace.get(key, key)] = self[key]
-        self.update(new_dict)
+            work_dict[replace.get(key, key)] = work_dict.pop(key)
+
+        if inplace:
+            self.update(work_dict)
+        else:
+            return work_dict
 
     def fromkeys(self, S, v):
         return type(self)(dict(self).fromkeys(S, v))
