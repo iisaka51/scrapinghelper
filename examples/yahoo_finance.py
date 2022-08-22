@@ -16,13 +16,13 @@ class YHFinance(Scraper):
         self.response = self.request(self.Finance.url)
 
     def get_market_summary(self)->list:
-        contents = self.get_texts(MARKET_SUMMARY)
+        contents = self.get_texts(MARKET_SUMMARY)[0]
         return contents
 
 if __name__ == '__main__':
-    from scrapinghelper.utils import split_list
+    from scrapinghelper.utils import split_chunks
 
     yahoo = YHFinance()
-    summary = yahoo.get_market_summary()[0]
-    for data in split_list(summary, 5):
+    summary = yahoo.get_market_summary()
+    for data in split_chunks(summary, 5):
         print(data)

@@ -470,12 +470,12 @@ def split_chunks(
     """
 
     for x in range(0, len(iterable), chunk_size):
-        every_chunk = iterable[x: chunk_size+x]
+        chunk_data = iterable[x: chunk_size+x]
 
-        if fill_na and len(every_chunk) < chunk_size:
-            every_chunk += [ na_value
-                             for y in range(chunk_size-len(every_chunk))]
-        yield every_chunk
+        if fill_na and (len(chunk_data) < chunk_size):
+            chunk_data += [ na_value
+                            for y in range(chunk_size-len(chunk_data))]
+        yield chunk_data
 
 
 class StrCase(object):

@@ -237,6 +237,50 @@ In [2]: from scrapinghelper import URL, Scraper, LogConfig
    ...: print(f'code: {response.status_code}')
    ...:
 code: 200
+```
+
+```python
+In [2]: # %load examples/yahoo_finance.py
+   ...: from typing import Any
+   ...: import numpy as np
+   ...: from scrapinghelper import Scraper, URL
+   ...:
+   ...: MARKET_SUMMARY = (
+   ...:     '#market-summary > div > div.D\(ib\).Fl\(start\).W\(100\%\) '
+   ...:     '> div.Carousel-Mask.Pos\(r\).Ov\(h\).market-summary'
+   ...:     '.M\(0\).Pos\(r\).Ov\(h\).D\(ib\).Va\(t\) > ul'
+   ...: )
+   ...:
+   ...: class YHFinance(Scraper):
+   ...:     Finance = URL('https://finance.yahoo.com/')
+   ...:
+   ...:     def __init__(self, **kwargs: Any):
+   ...:         super().__init__(browser_args='--incognito', **kwargs)
+   ...:         self.response = self.request(self.Finance.url)
+   ...:
+   ...:     def get_market_summary(self)->list:
+   ...:         contents = self.get_texts(MARKET_SUMMARY)[0]
+   ...:         return contents
+   ...:
+   ...: if __name__ == '__main__':
+   ...:     from scrapinghelper.utils import split_chunks
+   ...:
+   ...:     yahoo = YHFinance()
+   ...:     summary = yahoo.get_market_summary()
+   ...:     for data in split_chunks(summary, 5):
+   ...:         print(data)
+   ...:
+['S&P Futures', '', '4,215.50', '-16.00', '(-0.38%)']
+['Dow Futures', '', '33,583.00', '-123.00', '(-0.36%)']
+['Nasdaq Futures', '', '13,207.00', '-61.50', '(-0.46%)']
+['Russell 2000 Futures', '', '1,952.70', '-6.40', '(-0.33%)']
+['Crude Oil', '', '89.87', '-0.90', '(-0.99%)']
+['Gold', '', '1,759.70', '-3.20', '(-0.18%)']
+
+In [3]:
+```
+
+```python
 
 In [3]: from scrapinghelper import Scraper, LogConfig
    ...:
@@ -390,9 +434,27 @@ sudo apt install -y gconf-service libasound2 libatk1.0-0 libc6 libcairo2 libcups
 
 See Also: https://techoverflow.net/2020/09/29/how-to-fix-pyppeteer-pyppeteer-errors-browsererror-browser-closed-unexpectedly/
 
-## BONOUS
+## Utility class and Helper Functions
+
+ - class uDict
+   allow to change key for Dict.
+ - class iDict
+   Immutable Dict.
+ - class StrCase
+   Convert case for object(s).
 
 utilities for string manupulate helper functions.
+
+ -  is_alpha() - Check word is alphabet.
+ -  is_alnum() - Check word is alphabet and digits.
+ -  ordereddict_to_dict() - convert object from OrderedDict to Dict.
+ -  change_dict_keys() - Change keys of Dict.
+ -  replace_values() - Replace objects for object(s).
+ -  omit_values() - Omit values for object(s).
+ -  add_df() - Add data into DataFrame.
+ -  df_compare() - Check DataFrame is equals.
+ -  split_chunks() - Split iterable object into chunks.
+
 
 ```python
 In [1]: from scrapinghelper.utils import StrCase
