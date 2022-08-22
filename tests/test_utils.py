@@ -5,7 +5,7 @@ sys.path.insert(0,"../scrapinghelper")
 
 from scrapinghelper.utils import (
     StrCase, is_alpha, is_alnum, omit_values, replace_values,
-    add_df, df_compare, change_dict_keys, uDict, iDict
+    add_df, df_compare, change_dict_keys, uDict, iDict, split_chunks
 )
 from pprint import pprint
 from pathlib import Path
@@ -503,3 +503,39 @@ class TestClass:
         data = iDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
         result = dict({data: 1})
         assert  result[data]  == 1
+
+    def test_split_chunks_case01(self):
+        data = [11,12,13,21,22,23,31,32,33]
+        expect = [[11,12,13], [21,22,23], [31,32,33]]
+        result = list(split_chunks(data,3))
+        assert result == expect
+
+    def test_split_chunks_case02(self):
+        data = [11,12,13,14, 21,22,23,31,32,33]
+        expect = [[11,12,13, 14], [21,22,23,31], [32,33, None, None ]]
+        result = list(split_chunks(data,4))
+        assert result == expect
+
+    def test_split_chunks_case03(self):
+        data = [11,12,13,14, 21,22,23,31,32,33]
+        expect = [[11,12,13, 14], [21,22,23,31], [32,33, None, None ]]
+        result = list(split_chunks(data,4))
+        assert result == expect
+
+    def test_split_chunks_case04(self):
+        data = [11,12,13,14, 21,22,23,31,32,33]
+        expect = [[11,12,13, 14], [21,22,23,31], [32,33] ]
+        result = list(split_chunks(data,4, fill_na=False))
+        assert result == expect
+
+    def test_split_chunks_case05(self):
+        data = [11,12,13,14, 21,22,23,31,32,33]
+        expect = [[11,12,13, 14], [21,22,23,31], [32,33, -1, -1] ]
+        result = list(split_chunks(data,4, na_value=-1))
+        assert result == expect
+
+    def test_split_chunks_case06(self):
+        data = [11,12,13,14, 21,22,23,31,32,33]
+        expect = [[11,12,13, 14], [21,22,23,31], [32,33, 0, 0] ]
+        result = list(split_chunks(data,4, na_value=0))
+        assert result == expect

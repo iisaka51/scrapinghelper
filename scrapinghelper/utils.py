@@ -1,5 +1,8 @@
 import re
-from typing import Any, Dict, Union, Optional, Hashable, Literal, get_args
+from typing import (
+    Any, Dict, Union, Optional, Hashable, Iterable,
+    Literal, get_args
+)
 import numpy as np
 import pandas as pd
 from multimethod import multidispatch, multimethod
@@ -21,6 +24,7 @@ __all__ = [
     "df_compare",
     "ReplaceFor",
     "ReplaceForType",
+    "split_chunks",
 ]
 
 class ReplaceFor(str, Enum):
@@ -441,6 +445,38 @@ def df_compare(
     diffs = len(diff_df)
     return diffs
 
+def split_chunks(
+        iterable: Iterable,
+        chunk_size: int,
+        fill_na: bool=True,
+        na_value: Optional[Union[int,str,float]]=None
+    ) ->list:
+    """Return split into even chunk_size elements for iterable
+    Parameters
+    ----------
+    iterable: list
+        to split list
+    chunk_size: int
+        the size of chunk list.
+    fill_na: bool
+        subset of a list does not fit in the size of the defined chunk,
+        fillers need to be inserted in the place of the empty element holders.
+        fillers is able to set `na_value`.
+    na_value: int, str, default is `None`.
+
+    Returns
+    -------
+        splited list
+    """
+
+    for x in range(0, len(iterable), chunk_size):
+        every_chunk = iterable[x: chunk_size+x]
+
+        if fill_na and len(every_chunk) < chunk_size:
+            every_chunk += [ na_value
+                             for y in range(chunk_size-len(every_chunk))]
+        yield every_chunk
+
 
 class StrCase(object):
 
@@ -643,3 +679,4 @@ class StrCase(object):
             counts[col] = cur_count + 1
 
         return strings
+

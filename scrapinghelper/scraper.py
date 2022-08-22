@@ -21,6 +21,7 @@ from .user_agents import UserAgent
 from .user_agents import user_agent as useragent_manager
 
 DEFAULT_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/603.3.8 (KHTML, like Gecko) Version/10.1.2 Safari/603.3.8'
+DEFAULT_BROWSER_ARGS = '--no-sandbox -ignore-certificate-errors'
 
 class WebScraperException(BaseException):
     pass
@@ -40,11 +41,14 @@ def user_agent(style:Optional[str]=None) ->str:
         return DEFAULT_USER_AGENT
 
 def _gen_browser_args(
+        default_args: str = DEFAULT_BROWSER_ARGS,
         proxy_server:Optional[str]=None
     )->list:
-    default_args = os.environ.get('SCRAPINGHELPER_BROWSER_ARGS',
-                       default='--no-sandbox -ignore-certificate-errors' )
-    browser_args: list = default_args.split(' ')
+    default_args = '{} {}'.format(
+                                default_args,
+                                os.environ.get('SCRAPINGHELPER_BROWSER_ARGS',
+                                               default=DEFAULT_BROWSER_ARGS ) )
+    browser_args: list = list(dict.fromkeys(default_args.split(' ')))
 
     if proxy_server:
         browser_args += ["--proxy-server={}".format(proxy_server) ]
@@ -55,6 +59,7 @@ class HTMLSession(requests_html.BaseSession):
 
     def __init__(self,
             proxy_server: Optional[str]=None,
+            browser_args: str = DEFAULT_BROWSER_ARGS,
             **kwargs:Any
         )->None:
         self._proxy_server = None
@@ -62,8 +67,7 @@ class HTMLSession(requests_html.BaseSession):
         if proxy_server:
             self.proxy_server = proxy_server
 
-        browser_args = _gen_browser_args(proxy_server)
-        kwargs['browser_args'] = browser_args
+        kwargs['browser_args'] = _gen_browser_args(browser_args, proxy_server)
 
         super().__init__(**kwargs)
 
@@ -96,6 +100,7 @@ class AsyncHTMLSession(requests_html.BaseSession):
     def __init__(self,
             loop=None, workers=None,
             mock_browser: bool = True,
+            browser_args: str = DEFAULT_BROWSER_ARGS,
             proxy_server: Optional[str]=None,
             *args:Any, **kwargs:Any
         )-> None:
@@ -110,8 +115,7 @@ class AsyncHTMLSession(requests_html.BaseSession):
         if proxy_server:
             self.proxy_server = proxy_server
 
-        browser_args = _gen_browser_args(proxy_server)
-        kwargs['browser_args'] = browser_args
+        kwargs['browser_args'] = _gen_browser_args(browser_args, proxy_server)
 
         super().__init__(*args, **kwargs)
 
@@ -150,6 +154,8 @@ class Scraper(object):
     def __init__(self,
                  timeout: int=0,
                  sleep: int=10,
+                 *,
+                 browser_args: str = DEFAULT_BROWSER_ARGS,
                  keep_user_agents: int=50,
                  datapath: Optional[str]=None,
                  headers: Optional[dict]=None,
@@ -164,6 +170,9 @@ class Scraper(object):
 
         sleep: int
             if provided, of how many long to sleep after initial render.
+
+        browser_args: str
+            browser lunch option.
 
         keep_user_agents: int
             The number of user_agents to keep in memory. default is 50.
@@ -185,8 +194,10 @@ class Scraper(object):
     If just ``sleep`` is provided, the rendering will wait *n* seconds, before
     returning.
         """
+
         self.timeout = timeout
         self.sleep = sleep
+        self.browser_args = browser_args
         self.columns: list = list()
         self.values: list = list()
         self.df: pd.DataFrame = pd.DataFrame()
@@ -230,6 +241,10 @@ class Scraper(object):
             np.random.randint(0, MAX_IPV6)
         )
 
+    def random_wait(self, sleep: int=0):
+        sleep = sleep or self.sleep
+        time.sleep(np.random.randint(2,sleep))
+
     def load_proxies( self,
         proxies: Optional[Union[list,str]]=None):
         """ load proxies from URL/file/list.
@@ -252,6 +267,7 @@ class Scraper(object):
                 user_agent: Optional[str]=None,
                 proxy_rotate: ProxyRotate=ProxyRotate.NO_PROXY,
                 render: bool=True,
+                render_kwargs: dict={'keep_page': False},
                 **kwargs: Any,
         ) ->HTMLResponse:
         self.timeout = timeout or self.timeout
@@ -269,7 +285,8 @@ class Scraper(object):
         if not self.session:
             proxy_server = self.proxy_manager.get_proxy(proxy_rotate)
             proxy_server = proxy_server.proxy_map['https'] if proxy_server else None
-            self.session = AsyncHTMLSession( proxy_server=proxy_server)
+            self.session = AsyncHTMLSession( browser_args = self.browser_args,
+                                             proxy_server=proxy_server )
 
         self.session.headers.update(self.headers)
         logger.debug('URL: {}'.format(url))
@@ -282,7 +299,9 @@ class Scraper(object):
             if render:
                 await response.html.arender(
                                 timeout=self.timeout,
-                                sleep=np.random.randint(2,self.sleep))
+                                sleep=np.random.randint(2,self.sleep),
+                                **render_kwargs,
+                                )
             return response
 
         self.response = self.session.run(get_page)[0]
@@ -295,6 +314,7 @@ class Scraper(object):
                 user_agent: Optional[str]=None,
                 proxy_rotate: ProxyRotate=ProxyRotate.NO_PROXY,
                 render: bool=True,
+                render_kwargs: dict={'keep_page': False},
                 **kwargs: Any,
         ) ->HTMLResponse:
         """request get page from URL
@@ -315,7 +335,8 @@ class Scraper(object):
             if not self.session:
                 proxy_server = self.proxy_manager.get_proxy(proxy_rotate)
                 proxy_server = proxy_server.proxy_map['https'] if proxy_server else None
-                self.session = HTMLSession(proxy_server=proxy_server)
+                self.session = HTMLSession( browser_args = self.browser_args,
+                                            proxy_server=proxy_server )
 
             self.session.headers.update(self.headers)
             logger.debug('URL: {}'.format(url))
@@ -324,17 +345,19 @@ class Scraper(object):
             self.response = self.session.get(url, proxies=proxy_map, **kwargs)
             logger.debug('response status_code: {}'.format(self.response.status_code))
             if render:
-                self.response.html.render(
-                    timeout=self.timeout,
-                    sleep=np.random.randint(2,self.sleep))
+                render_kwargs['timeout'] = render_kwargs.get('timtout',
+                                                              self.timeout )
+                sleep = render_kwargs.get('sleep', self.sleep)
+                render_kwargs['sleep'] = np.random.randint(2,sleep)
+                self.response.html.render( **render_kwargs )
             return self.response
 
         except requests.exceptions.RequestException as e:
             logger.exception("request failed")
 
     def get_texts(self,
-        html: HTML,
         selector: Union[list, str]=['table', 'tr'],
+        html: Optional[HTML]=None,
         split: str='\n',
         **kwargs: Any,
         )->list:
@@ -353,8 +376,12 @@ class Scraper(object):
         if isinstance(selector, str):
             selector = [selector]
 
+        html = html or self.response.html
+
         elements = html.find(selector[0], **kwargs)
         for select in selector[-1:]:
+            if select == selector[0]:
+                continue
             elements = elements[0].find(select, **kwargs)
 
         if hasattr(elements, '__iter__'):
@@ -365,11 +392,11 @@ class Scraper(object):
 
 
     def get_links(self,
-        html: HTML,
         selector: str='a',
         startswith: Optional[Union[list,str]] = None,
         endswith: Optional[Union[list,str]] = None,
         containing: Optional[Union[list,str]] = None,
+        html: Optional[HTML]=None,
         **kwargs: Any,
         ) -> list:
         """get links from contents of HTML object.
@@ -395,6 +422,7 @@ class Scraper(object):
         ------
         list of result: str
         """
+        html = html or self.response.html
 
         if startswith and isinstance(startswith, str):
             startswith = [startswith]
