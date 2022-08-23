@@ -436,12 +436,12 @@ See Also: https://techoverflow.net/2020/09/29/how-to-fix-pyppeteer-pyppeteer-err
 
 ## Utility class and Helper Functions
 
+ - class StrCase
+   Convert case for object(s).
  - class uDict
    allow to change key for Dict.
  - class iDict
-   Immutable Dict.
- - class StrCase
-   Convert case for object(s).
+   Immutable Dict. iDict object hashable.
 
 utilities for string manupulate helper functions.
 
@@ -454,7 +454,10 @@ utilities for string manupulate helper functions.
  -  add_df() - Add data into DataFrame.
  -  df_compare() - Check DataFrame is equals.
  -  split_chunks() - Split iterable object into chunks.
+ -  urange() - Return an object that produces a sequence of integes.
 
+
+### class StrCase
 
 ```python
 In [1]: from scrapinghelper.utils import StrCase
@@ -487,4 +490,194 @@ In [7]: c.convert_case(['Good Morning','Thank you'], 'camel')
 Out[7]: ['goodMorning', 'thankYou']
 
 In [8]:
+```
+
+### class uDict
+support change keys  for dict.
+
+```python
+from scrapinghelerp.utils import uDict
+
+data = uDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
+expect = { 'January': 1, 'February': 2, 'March': 3, 'Apr': 4 }
+saved = data.copy()
+result = data.replace_key('April', 'Apr')
+assert ( result == expect and data == saved )
+
+data = uDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
+replace = {'January': 'Jan', 'February': 'Feb' }
+expect = { 'Jan': 1, 'Feb': 2, 'March': 3, 'April': 4 }
+saved = data.copy()
+result = data.replace_key_map(replace)
+assert ( result == expect
+         and data == saved )
+
+data = uDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
+replace = {'January': 'Jan', 'February': 'Feb' }
+expect = { 'Jan': 1, 'Feb': 2, 'March': 3, 'April': 4 }
+saved = data.copy()
+result = data.replace_key_map(replace)
+assert ( result == expect and data == saved )
+
+data = uDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
+replace = {'January': 'Jan', 'February': 'Feb' }
+expect = { 'Jan': 1, 'Feb': 2, 'March': 3, 'April': 4 }
+saved = data.copy()
+data.replace_key_map(replace, inplace=True)
+assert ( data == expect and data != saved )
+```
+
+### class iDict
+
+Immutable Dict. iDict object hashable.
+
+```python
+In [1] from scrapinghelerp.utils import uDict
+
+In [2]: data = iDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
+
+In [3]: try:
+   ...:     data['March']='Mar'
+   ...: except TypeError as e:
+   ...:     print(e)
+   ...:
+iDict object does not support item assignment
+
+In [4]: hasattr(data, '__hash__')
+Out[4]: True
+
+In [5]: d = dict({data: 2})
+
+In [6]: type(d)
+Out[6]: dict
+
+In [7]: d
+Out[7]: {{'January': 1, 'February': 2, 'March': 3, 'April': 4}: 2}
+
+In [8]: d[data]
+Out[8]: 2
+
+In [9]:
+```
+
+#### chnage_dict_keys()
+
+```python
+data = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
+replace = {'March': 3, 'April': 4 }
+expect = { 'January': 1, 'February': 2, 3: 3, 4: 4 }
+result = change_dict_keys(data, replace)
+assert result == expect
+
+data = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
+replace = {'April': 4, 'September': 9 }
+expect = { 'January': 1, 'February': 2, 3: 3, 4: 4 }
+saved = data.copy()
+change_dict_keys(data, replace, inplace=True)
+assert ( data == expect and data != saved )
+```
+
+
+`split_chunks()` Return split into even chunk_size elements.
+
+```python
+data = [11,12,13,14, 21,22,23,31,32,33]
+expect = [[11,12,13, 14], [21,22,23,31], [32,33, None, None ]]
+result = list(split_chunks(data,4))
+assert result == expect
+
+data = [11,12,13,14, 21,22,23,31,32,33]
+expect = [[11,12,13, 14], [21,22,23,31], [32,33] ]
+result = list(split_chunks(data,4, fill_na=False))
+assert result == expect
+
+data = [11,12,13,14, 21,22,23,31,32,33]
+expect = [[11,12,13, 14], [21,22,23,31], [32,33, -1, -1] ]
+result = list(split_chunks(data,4, na_value=-1))
+assert result == expect
+```
+
+if pass tuple as input. return list of tuple for chunk data.
+
+```python
+data = (11,12,13,21,22,23,31,32,33)
+expect = [(11,12,13), (21,22,23), (31,32,33)]
+result = list(split_chunks(data,3))
+assert result == expect
+```
+
+if pass dict objects as input. return list of dict for chunk data.
+`fill_na` and `na_value` is always ignored.
+
+```python
+data = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
+expect = [{ 'January': 1, 'February': 2, 'March': 3},
+          { 'April': 4 } ]
+result = list(split_chunks(data,3))
+assert result == expect
+
+data = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
+expect = [{ 'January': 1, 'February': 2, 'March': 3},
+          { 'April': 4 } ]
+result = list(split_chunks(data,3, fill_na=True))
+assert result == expect
+
+data = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
+expect = [{ 'January': 1, 'February': 2, 'March': 3},
+          { 'April': 4 } ]
+result = list(split_chunks(data,3, na_value=None))
+```
+
+if pass str objects as input. return list of str for chunk data.
+`fill_na` and `na_value` is always ignored.
+
+```python
+data = "Peter Piper picked a peck of pickled peppers."
+expect = [ "Peter Piper picked a",
+           " peck of pickled pep",
+           "pers." ]
+result = list(split_chunks(data,20))
+assert result == expect
+
+data = "Peter Piper picked a peck of pickled peppers."
+expect = [ "Peter Piper picked a",
+           " peck of pickled pep",
+           "pers." ]
+result = list(split_chunks(data,20, fill_na=True, na_value=None))
+assert result == expect
+```
+
+`urange()` is almost same as `range()`
+
+```
+expect = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+result = list(urange(10))
+assert result == expect
+
+expect = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+result = list(urange(1, 10))
+assert result == expect
+
+expect = [1, 3, 5, 7, 9]
+result = list(urange(1, 10, 2))
+assert result == expect
+
+expect = [10, 8, 6, 4, 2]
+result = list(urange(10, 1, -2))
+assert result == expect
+
+expect = [10, 9, 8, 7, 6, 5, 4, 3, 2]
+result = list(urange(10, 1))
+assert result == expect
+```
+
+`urange()` support callable as step.
+
+```python
+def  gen_step(val):
+    return (val * 3)
+
+expect = [1, 4, 16]
+result = list(urange(1, 20, gen_step))
+assert result == expect
 ```

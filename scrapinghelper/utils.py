@@ -9,7 +9,6 @@ from multimethod import multidispatch, multimethod
 from unicodedata import normalize
 from collections import OrderedDict
 from enum import Enum
-import snoop
 
 __all__ = [
     "urange",
@@ -83,7 +82,6 @@ class urange(object):
             self._step = kwargs.get('step', 0)
 
         self.step_callable = callable(self._step)
-        snoop.pp(self.step_callable)
         if self._i <= self._end:
             self.ascending = True
             if self._step == 0:
@@ -102,7 +100,6 @@ class urange(object):
     def __iter__(self):
         return self
 
-    @snoop
     def __next__(self):
         if self.ascending:
             if self._i >= self._end:

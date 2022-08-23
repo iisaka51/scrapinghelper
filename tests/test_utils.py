@@ -168,68 +168,37 @@ class TestClass:
         assert ( df_compare(d1, d2) != 0 )
 
     def test_omit_values(self):
-        data = ['January', 'February', 'March', 'April',
-                'May', 'June', 'July', 'August',
-                'September', 'October', 'November', 'December']
-
-        omits = ['April', 'September']
-
-        expect = ['January', 'February', 'March', '',
-                'May', 'June', 'July', 'August',
-                '', 'October', 'November', 'December']
+        data = ['January', 'February', 'March', 'April' ]
+        omits = ['February', 'April']
+        expect = ['January', '', 'March', '' ]
         result = omit_values(data, omits)
         assert result == expect
 
     def test_omit_values_ignore_case(self):
-        data = ['January', 'February', 'March', 'April',
-                'May', 'June', 'July', 'August',
-                'September', 'October', 'November', 'December']
-
-        omits = ['april', 'september']
-
-        expect = ['January', 'February', 'March', '',
-                'May', 'June', 'July', 'August',
-                '', 'October', 'November', 'December']
+        data = ['January', 'February', 'March', 'April' ]
+        omits = ['february', 'april']
+        expect = ['January', '', 'March', '' ]
         result = omit_values(data, omits, ignore_case=True)
         assert result == expect
 
     def test_omit_values_with_drop(self):
-        data = ['January', 'February', 'March', 'April',
-                'May', 'June', 'July', 'August',
-                'September', 'October', 'November', 'December']
-
-        omits = ['April', 'September']
-
-        expect = ['January', 'February', 'March',
-                'May', 'June', 'July', 'August',
-                'October', 'November', 'December']
+        data = ['January', 'February', 'March', 'April' ]
+        omits = ['February', 'April']
+        expect = ['January', 'March' ]
         result = omit_values(data, omits, drop=True)
         assert result == expect
 
     def test_omit_values_asstr(self):
-        data = ( 'January' 'February' 'March' 'April'
-                'May' 'June' 'July' 'August'
-                'September' 'October' 'November' 'December' )
-
-        omits = ['April', 'September']
-
-        expect = ( 'January' 'February' 'March' ''
-                'May' 'June' 'July' 'August'
-                '' 'October' 'November' 'December' )
-
+        data = "JanuaryFebruaryMarchApril"
+        omits = ['February', 'April']
+        expect = "JanuaryMarch"
         result = omit_values(data, omits)
         assert result == expect
 
     def test_replace_values_list(self):
-        data = ['January', 'February', 'March', 'April',
-                'May', 'June', 'July', 'August',
-                'September', 'October', 'November', 'December']
-
-        replace = {'April': 'april', 'September': 'september' }
-
-        expect = ['January', 'February', 'March', 'april',
-                'May', 'June', 'July', 'August',
-                'september', 'October', 'November', 'December']
+        data = ['January', 'February', 'March', 'April' ]
+        replace = { 'February': 'february', 'April': 'april' }
+        expect = ['January', 'february', 'March', 'april' ]
         result = replace_values( data, replace)
         assert result == expect
 
@@ -587,16 +556,12 @@ class TestClass:
 
     def test_split_chunks_case13(self):
         data = "Peter Piper picked a peck of pickled peppers."
-        expect = ["Peter",
-                  " Pipe",
-                  "r pic",
-                  "ked a",
-                  " peck",
-                  " of p",
-                  "ickle",
-                  "d pep",
+        expect = ["Peter Pipe",
+                  "r picked a",
+                  " peck of p",
+                  "ickled pep",
                   "pers."]
-        result = list(split_chunks(data,5))
+        result = list(split_chunks(data,10))
         assert result == expect
 
     def test_split_chunks_case14(self):
