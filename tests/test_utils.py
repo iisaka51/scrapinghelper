@@ -1,11 +1,12 @@
 import sys
+import time
 import pytest
 
 sys.path.insert(0,"../scrapinghelper")
 
 from scrapinghelper.utils import (
     StrCase, is_alpha, is_alnum, omit_values, replace_values,
-    add_df, df_compare, change_dict_keys, uDict, iDict, split_chunks
+    add_df, df_compare, change_dict_keys, uDict, iDict, split_chunks, urange
 )
 from pprint import pprint
 from pathlib import Path
@@ -539,3 +540,170 @@ class TestClass:
         expect = [[11,12,13, 14], [21,22,23,31], [32,33, 0, 0] ]
         result = list(split_chunks(data,4, na_value=0))
         assert result == expect
+
+    def test_split_chunks_case07(self):
+        data = [11,12,13,14, 21,22,23,31,32,33]
+        expect = [ [11,12,13,14], [21,22,23,31], [32, 33] ]
+        result = list(split_chunks(data,4, fill_na=False, na_value=0))
+        assert result == expect
+
+    def test_split_chunks_case08(self):
+        data = (11,12,13,21,22,23,31,32,33)
+        expect = [(11,12,13), (21,22,23), (31,32,33)]
+        result = list(split_chunks(data,3))
+        assert result == expect
+
+    def test_split_chunks_case09(self):
+        data = { 'January': 1, 'February': 2, 'March': 3, 'April': 4,
+                 'May': 5, 'June': 6, 'July': 7, 'August': 8,
+                 'September': 9, 'October': 10, 'November': 11, 'December': 12}
+        expect = [{ 'January': 1, 'February': 2, 'March': 3},
+                  { 'April': 4, 'May': 5, 'June': 6},
+                  { 'July': 7, 'August': 8, 'September': 9},
+                  { 'October': 10, 'November': 11, 'December': 12} ]
+        result = list(split_chunks(data,3))
+        assert result == expect
+
+    def test_split_chunks_case10(self):
+        data = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
+        expect = [{ 'January': 1, 'February': 2, 'March': 3},
+                  { 'April': 4 } ]
+        result = list(split_chunks(data,3))
+        assert result == expect
+
+    def test_split_chunks_case11(self):
+        data = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
+        expect = [{ 'January': 1, 'February': 2, 'March': 3},
+                  { 'April': 4 } ]
+        result = list(split_chunks(data,3, fill_na=True))
+        assert result == expect
+
+    def test_split_chunks_case12(self):
+        data = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
+        expect = [{ 'January': 1, 'February': 2, 'March': 3},
+                  { 'April': 4 } ]
+        result = list(split_chunks(data,3, na_value=None))
+        assert result == expect
+
+    def test_split_chunks_case13(self):
+        data = "Peter Piper picked a peck of pickled peppers."
+        expect = ["Peter",
+                  " Pipe",
+                  "r pic",
+                  "ked a",
+                  " peck",
+                  " of p",
+                  "ickle",
+                  "d pep",
+                  "pers."]
+        result = list(split_chunks(data,5))
+        assert result == expect
+
+    def test_split_chunks_case14(self):
+        data = "Peter Piper picked a peck of pickled peppers."
+        expect = [ "Peter Piper picked a",
+                   " peck of pickled pep",
+                   "pers." ]
+        result = list(split_chunks(data,20))
+        assert result == expect
+
+    def test_split_chunks_case15(self):
+        data = "Peter Piper picked a peck of pickled peppers."
+        expect = [ "Peter Piper picked a",
+                   " peck of pickled pep",
+                   "pers." ]
+        result = list(split_chunks(data,20, fill_na=True, na_value=None))
+        assert result == expect
+
+    def test_urange_case01(self):
+        expect = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        result = list(urange(10))
+        assert result == expect
+
+    def test_urange_case02(self):
+        expect = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        result = list(urange(1, 10))
+        assert result == expect
+
+    def test_urange_case03(self):
+        expect = [1, 3, 5, 7, 9]
+        result = list(urange(1, 10, 2))
+        assert result == expect
+
+    def test_urange_case04(self):
+        expect = [10, 8, 6, 4, 2]
+        result = list(urange(10, 1, -2))
+        assert result == expect
+
+    def test_urange_case05(self):
+        expect = [10, 9, 8, 7, 6, 5, 4, 3, 2]
+        result = list(urange(10, 1))
+        assert result == expect
+
+    def test_urange_case06(self):
+        expect = [10, 8, 6, 4, 2]
+        with pytest.raises(ValueError) as e:
+            result = list(urange(10, 1, 1))
+        assert ( str(e.value)
+                 == "Step must be negative value for descending orders." )
+
+    def test_urange_case07(self):
+        expect = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        with pytest.raises(ValueError) as e:
+            result = list(urange(1, 10, -1))
+        assert ( str(e.value)
+                 == "Step must be postitive value for ascending orders." )
+
+    def test_urange_case08(self):
+        expect = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        result = list(urange(end=10))
+        assert result == expect
+
+    def test_urange_case09(self):
+        expect = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        result = list(urange(end=10, start=1))
+        assert result == expect
+
+    def test_urange_case10(self):
+        expect = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        result = list(urange(end=10, start=1, step=1))
+        assert result == expect
+
+    def test_urange_case11(self):
+        expect = [10, 8, 6, 4, 2]
+        with pytest.raises(ValueError) as e:
+            result = list(urange(start=10, end=1, step=1))
+        assert ( str(e.value)
+                 == "Step must be negative value for descending orders." )
+
+    def test_urange_case12(self):
+        expect = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        with pytest.raises(ValueError) as e:
+            result = list(urange(start=1, end=10, step=-1))
+        assert ( str(e.value)
+                 == "Step must be postitive value for ascending orders." )
+
+    def test_urange_case13(self):
+        def  gen_step(val):
+             return (val * 3)
+
+        expect = [1, 4, 16]
+        result = list(urange(1, 20, gen_step))
+        assert result == expect
+
+    def test_urange_case14(self):
+        def  gen_step(val):
+             return (val * 3)
+
+        expect = [1, 4, 16]
+        result = list(urange(start=1, end=20, step=gen_step))
+        assert result == expect
+
+    def test_urange_case15(self):
+        def  gen_step(val):
+             return (val * 3)
+
+        expect = [1, 4, 16]
+        result = list(urange(1, 20, step=gen_step))
+        assert result == expect
+
