@@ -26,7 +26,6 @@ class UserAgent(object):
 
         self.load_datafile(keep_user_agents, datapath)
 
-
     def load_datafile(self,
         keep_user_agents: int=50,
         datapath: Optional[str]=None,
@@ -49,9 +48,7 @@ class UserAgent(object):
         df = pd.DataFrame( data=user_agents, columns=['user_agent'] )
         df = df[~df.user_agent.isin(self.__known_bad_user_agents)]
         if keep_user_agents:
-            chosen_index = np.random.choice(self.user_agent_count,
-                                     size=keep_user_agents, replace = True)
-            self.user_agents = df.iloc[chosen_index]
+            self.user_agents = df.sample(n=keep_user_agents)
         else:
             self.user_agents = df.copy()
 
@@ -60,9 +57,9 @@ class UserAgent(object):
         self.first_user_agent = next(self.user_agent_pool)
 
     def get_random_user_agent(self) ->str:
-        chosen_index = int(np.random.choice(self.keep_user_agents,
-                                          replace=True, size=1))
-        return self.user_agents.iloc[chosen_index,0]
+        user_agent = np.random.choice(self.user_agents.user_agent.to_list(),
+                                      replace=True, size=1)
+        return user_agent
 
     def get_next_user_agent(self) ->str:
         return next(self.user_agent_pool)

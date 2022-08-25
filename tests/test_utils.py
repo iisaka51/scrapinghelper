@@ -14,6 +14,56 @@ import numpy as np
 import pandas as pd
 
 class TestClass:
+    def test_strcase_case01(self):
+        data = "The sky is the limit"
+        expect = 'StrCase("The sky is the limit")'
+        s = StrCase(data)
+        assert s.__repr__() == expect
+
+    def test_strcase_case02(self):
+        data = "The sky is the limit"
+        expect = "THE sky is the limit"
+        s = StrCase(data)
+        assert s.origin.replace('The', 'THE') == expect
+
+    def test_strcase_case03(self):
+        data = "The sky is the limit"
+        expect = data
+        s = StrCase(data)
+        assert s.__str__() == expect
+
+    def test_strcase_case04(self):
+        data = 1
+        expect = "Exprected str or list objects, got <class 'int'>."
+        with pytest.raises(TypeError) as e:
+            s = StrCase(data)
+        assert str(e.value) == expect
+
+    def test_strcase_case05(self):
+        data = ["Good luck", "The sky is the limit"]
+        expect = "Expected at most 1 arguments, got 2."
+        with pytest.raises(TypeError) as e:
+            s = StrCase(*data)
+        assert str(e.value) == expect
+
+    def test_strcase_case06(self):
+        data = ["Good luck", "The sky is the limit"]
+        expect = "StrCase(['Good luck', 'The sky is the limit'])"
+        s = StrCase(data)
+        assert s.__repr__() == expect
+
+    def test_strcase_case07(self):
+        data = ["Good luck", "The sky is the limit"]
+        expect = "['Good luck', 'The sky is the limit']"
+        s = StrCase(data)
+        assert s.__str__() == expect
+
+    def test_strcase_case08(self):
+        data = ["Good luck", "The sky is the limit"]
+        expect = "Good luck"
+        s = StrCase(data)
+        assert s.origin[0] == expect
+
     def test_show_supported_case(self):
         expect = {'case': 'sample',
                  'snake': 'convert_case',

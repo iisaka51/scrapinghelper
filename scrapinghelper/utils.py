@@ -680,7 +680,7 @@ def _split_chunks_str(
 
 class StrCase(object):
 
-    def __init__(self):
+    def __init__(self, *args: Any):
         self.__NULL_VALUES = {"", None, np.nan, pd.NA}
 
         self.__supported_case = {
@@ -730,6 +730,39 @@ class StrCase(object):
                  'convertor': lambda x: " ".join(x).upper() },
         }
 
+        if len(args) == 0:
+            self.__origin = None
+        elif len(args) == 1:
+            if self.validate(args[0]) is not None:
+                self.__origin = args[0]
+            else:
+                raise TypeError(
+                    'Exprected str or list objects, got {}.'
+                    .format(type(args[0]) ))
+        else:
+            raise TypeError(
+                'Expected at most 1 arguments, got {}.'.format(len(args)))
+
+    def validate(self,
+            val: Union[str, list]
+        )-> Union[str, list]:
+
+        if ( isinstance(val, str)
+             or isinstance(val, list) ):
+            return val
+        else:
+            return None
+
+    @property
+    def origin(self):
+        return self.__origin
+
+    @origin.setter
+    def origin(self, val):
+        if self.validate(args[0]):
+            self.__origin = val
+        else:
+            raise TypeError('Invalid Type')
 
     def show_supported_case(self, verbose=False):
         header = { "case":  "sample" }
@@ -800,9 +833,11 @@ class StrCase(object):
         --------
         converted string: str
         """
+        if obj == str() and self.__origin:
+            obj = self.__origin
 
+        na_values = na_values or "" if isinstance(obj, str) else "NaN"
         if obj in self.__NULL_VALUES:
-            na_values = na_values or "" if isinstance(obj, str) else "NaN"
             return na_values
 
         if case in self.__supported_case:
@@ -821,6 +856,9 @@ class StrCase(object):
             **kwargs: Any
         ) -> list:
         """Convert case style for list of obj."""
+
+        if obj == list():
+            obj = self.__origin
 
         return [ self.convert_case(x, case, na_values) for x in obj ]
 
@@ -880,3 +918,11 @@ class StrCase(object):
 
         return strings
 
+    def __str__(self) -> str:
+        return str(self.origin)
+
+    def __repr__(self) -> str:
+        if isinstance(self.__origin, str):
+            return f'StrCase("{self.__origin}")'
+        else:
+            return f'StrCase({self.__origin})'

@@ -9,8 +9,9 @@ from pprint import pprint
 
 class TestClass:
     def test_user_random_agent(self):
-        for _ in range(10):
-            u = UserAgent()
+        for n in range(100):
+          u = UserAgent()
+          for _ in range(20):
             assert u.get_random_user_agent() in u.user_agents.user_agent.to_list()
     def test_keep_user_agents_default(self):
         u = UserAgent()
