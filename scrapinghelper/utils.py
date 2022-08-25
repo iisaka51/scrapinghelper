@@ -957,11 +957,11 @@ class StrCase(object):
         if case in self.__supported_case:
             separaator = self.__supported_case[case]['separaator']
 
-        for i, col in enumerate(strings):
-            cur_count = counts.get(col, 0)
+        for i, val in enumerate(strings):
+            cur_count = counts.get(val, 0)
             if cur_count > 0:
                 strings[i] = "{}{}{}".format(col, separaator, cur_count)
-            counts[col] = cur_count + 1
+            counts[val] = cur_count + 1
 
         return strings
 
