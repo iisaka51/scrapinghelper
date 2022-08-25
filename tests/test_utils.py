@@ -469,6 +469,58 @@ class TestClass:
             result = dict({data: 1})
         assert str(e.value) == "unhashable type: 'uDict'"
 
+    def test_udict_case07(self):
+        data = [ 'January', 'February', 'March', 'April' ]
+        expect = uDict({1: 'January', 2: 'February', 3: 'March', 4: 'April'})
+        result = uDict().fromvalues(data)
+        assert result == expect
+
+    def test_udict_case08(self):
+        data = [ 'January', 'February', 'March', 'April' ]
+        expect = uDict({0: 'January', 1: 'February', 2: 'March', 3: 'April'})
+        result = uDict().fromvalues(data, base=0)
+        assert result == expect
+
+    def test_udict_case09(self):
+        keys = [ 1, 2, 3, 4 ]
+        values = [ 'January', 'February', 'March', 'April' ]
+        expect = uDict({1: 'January', 2: 'February', 3: 'March', 4: 'April'})
+        result = uDict().fromlists(keys, values)
+        assert result == expect
+
+    def test_udict_case10(self):
+        values = [ 'January', 'February', 'March', 'April' ]
+        keys = range(1, len(values)+1)
+        expect = uDict({1: 'January', 2: 'February', 3: 'March', 4: 'April'})
+        result = uDict().fromlists(keys, values)
+        assert result == expect
+
+    def test_udict_case11(self):
+        keys = [ 1, 2, ]
+        values = [ 'January', 'February', 'March', 'April' ]
+        expect = uDict({1: 'January', 2: 'February' })
+        result = uDict().fromlists(keys, values)
+        assert result == expect
+
+    def test_udict_case12(self):
+        keys = [ 1, 2, 3, 4 ]
+        values = [ 'January', 'February' ]
+        expect = uDict({1: 'January', 2: 'February' })
+        result = uDict().fromlists(keys, values)
+        assert result == expect
+
+    def test_udict_case13(self):
+        data = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
+        expect = "{'January': 1, 'February': 2, 'March': 3, 'April': 4}"
+        result = uDict(data)
+        assert result.__str__() == expect
+
+    def test_udict_case14(self):
+        data = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
+        expect = "uDict({'January': 1, 'February': 2, 'March': 3, 'April': 4})"
+        result = uDict(data)
+        assert result.__repr__() == expect
+
     def test_idict_case01(self):
         data = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
         expect = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
@@ -523,6 +575,58 @@ class TestClass:
         data = iDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
         result = dict({data: 1})
         assert  result[data]  == 1
+
+    def test_idict_case11(self):
+        data = [ 'January', 'February', 'March', 'April' ]
+        expect = iDict({1: 'January', 2: 'February', 3: 'March', 4: 'April'})
+        result = iDict().fromvalues(data)
+        assert result == expect
+
+    def test_idict_case12(self):
+        data = [ 'January', 'February', 'March', 'April' ]
+        expect = iDict({0: 'January', 1: 'February', 2: 'March', 3: 'April'})
+        result = iDict().fromvalues(data, base=0)
+        assert result == expect
+
+    def test_idict_case13(self):
+        keys = [ 1, 2, 3, 4 ]
+        values = [ 'January', 'February', 'March', 'April' ]
+        expect = iDict({1: 'January', 2: 'February', 3: 'March', 4: 'April'})
+        result = iDict().fromlists(keys, values)
+        assert result == expect
+
+    def test_idict_case14(self):
+        values = [ 'January', 'February', 'March', 'April' ]
+        keys = range(1, len(values)+1)
+        expect = iDict({1: 'January', 2: 'February', 3: 'March', 4: 'April'})
+        result = iDict().fromlists(keys, values)
+        assert result == expect
+
+    def test_idict_case15(self):
+        keys = [ 1, 2, ]
+        values = [ 'January', 'February', 'March', 'April' ]
+        expect = iDict({1: 'January', 2: 'February' })
+        result = iDict().fromlists(keys, values)
+        assert result == expect
+
+    def test_idict_case16(self):
+        keys = [ 1, 2, 3, 4 ]
+        values = [ 'January', 'February' ]
+        expect = iDict({1: 'January', 2: 'February' })
+        result = iDict().fromlists(keys, values)
+        assert result == expect
+
+    def test_idict_case17(self):
+        data = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
+        expect = "{'January': 1, 'February': 2, 'March': 3, 'April': 4}"
+        result = iDict(data)
+        assert result.__str__() == expect
+
+    def test_idict_case18(self):
+        data = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
+        expect = "iDict({'January': 1, 'February': 2, 'March': 3, 'April': 4})"
+        result = iDict(data)
+        assert result.__repr__() == expect
 
     def test_split_chunks_case01(self):
         data = [11,12,13,21,22,23,31,32,33]

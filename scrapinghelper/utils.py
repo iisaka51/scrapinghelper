@@ -1,6 +1,7 @@
 import re
+import json
 from typing import (
-    Any, Dict, Union, Optional, Hashable, Iterable,
+    Any, Dict, Union, Optional, Hashable, Iterable, Sequence,
     Literal, get_args
 )
 import numpy as np
@@ -141,8 +142,31 @@ class uDict(dict):
         else:
             return work_dict
 
-    def fromkeys(self, S, v):
-        return type(self)(dict(self).fromkeys(S, v))
+    def fromkeys(self,
+            seq: Sequence,
+            value: Any
+        ):
+        return type(self)(dict(self).fromkeys(seq, value))
+
+    def fromvalues(self,
+            seq: Sequence,
+            base: int=1
+        ):
+        return type(self)({base+x: seq[x] for x in range(len(seq))})
+
+    def fromlists(self,
+            keys: Sequence,
+            values: Sequence,
+        ):
+        zipobj = zip(keys, values)
+        return type(self)(dict(zipobj))
+
+    def __str__(self):
+        return "{}".format(dict(self).__str__())
+
+    def __repr__(self):
+        return 'uDict({})'.format(dict(self).__str__())
+
 
 class iDict(dict):
     def __missing__(self, key):
@@ -168,8 +192,31 @@ class iDict(dict):
     def __hash__(self):
         return hash(tuple(sorted(self.items())))
 
-    def fromkeys(self, S, v):
-        return type(self)(dict(self).fromkeys(S, v))
+    def fromkeys(self,
+            seq: Sequence,
+            value: Any
+        ):
+        return type(self)(dict(self).fromkeys(seq, value))
+
+    def fromvalues(self,
+            seq: Sequence,
+            base: int=1
+        ):
+        return type(self)({base+x: seq[x] for x in range(len(seq))})
+
+    def fromlists(self,
+            keys: Sequence,
+            values: Sequence,
+        ):
+        zipobj = zip(keys, values)
+        return type(self)(dict(zipobj))
+
+    def __str__(self):
+        return "{}".format(dict(self).__str__())
+
+    def __repr__(self):
+        return 'iDict({})'.format(dict(self).__str__())
+
 
 def is_alpha(word: str)-> bool:
     """ Check word is alphabet.
@@ -923,6 +970,6 @@ class StrCase(object):
 
     def __repr__(self) -> str:
         if isinstance(self.__origin, str):
-            return f'StrCase("{self.__origin}")'
+            return 'StrCase("{}")'.format(self.__origin)
         else:
-            return f'StrCase({self.__origin})'
+            return 'StrCase({})'.format(self.__origin)
