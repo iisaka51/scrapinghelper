@@ -960,7 +960,7 @@ class StrCase(object):
         for i, val in enumerate(strings):
             cur_count = counts.get(val, 0)
             if cur_count > 0:
-                strings[i] = "{}{}{}".format(col, separaator, cur_count)
+                strings[i] = "{}{}{}".format(val, separaator, cur_count)
             counts[val] = cur_count + 1
 
         return strings
