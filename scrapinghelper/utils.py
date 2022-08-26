@@ -10,6 +10,7 @@ from multimethod import multidispatch, multimethod
 from unicodedata import normalize
 from collections import OrderedDict
 from enum import Enum
+import snoop
 
 __all__ = [
     "urange",
@@ -843,8 +844,9 @@ class StrCase(object):
         return self.__origin
 
     @origin.setter
+    @snoop
     def origin(self, val):
-        if self.validate(args[0]):
+        if self.validate(val):
             self.__origin = val
         else:
             raise TypeError('Invalid Type')
@@ -888,7 +890,7 @@ class StrCase(object):
             data: str,
         )-> str:
 
-        if data is not '':
+        if data != '':
             if case in self.__supported_case:
                 words = self.__supported_case[ case ]['splitor'](data)
                 data = self.__supported_case[ case ]['convertor'](words)

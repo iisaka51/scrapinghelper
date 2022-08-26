@@ -623,7 +623,7 @@ assert ( data == expect and data != saved )
 ```
 
 
-### `split_chunks()`
+### split_chunks()
 
 Return split into even chunk_size elements.
 
@@ -694,6 +694,8 @@ result = list(split_chunks(data,20, fill_na=True, na_value=None))
 assert result == expect
 ```
 
+### urange()
+
 `urange()` is almost same as `range()`
 
 ```
@@ -718,9 +720,7 @@ result = list(urange(10, 1))
 assert result == expect
 ```
 
-### `urange()`
-
-support callable as step.
+`urange()` support callable as step.
 
 ```python
 def  gen_step(val):
@@ -731,7 +731,7 @@ result = list(urange(1, 20, gen_step))
 assert result == expect
 ```
 
-### `rename_duplicate()`
+### rename_duplicate()
 
 Rename duplicate string for list or values of dict.
 
