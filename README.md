@@ -459,6 +459,8 @@ utilities for string manupulate helper functions.
 
 ### class StrCase
 
+`strCase` class support convert case.
+
 ```python
 In [1]: from scrapinghelper.utils import StrCase
 
@@ -477,19 +479,60 @@ Out[3]:
  'lower': 'convert case',
  'upper': 'CONVERT CASE'}
 
-In [4]: c.convert_case('The sky is the limits', 'sentence')
+In [4]: c.convert_case('sentence', 'The sky is the limits')
 Out[4]: 'The sky is the limits'
 
 In [5]: c.convert_case('The sky is the limits')
 Out[5]: 'the_sky_is_the_limits'
 
-In [6]: c.convert_case('The sky is the limits', 'const')
+In [6]: c.convert_case('const', 'The sky is the limits')
 Out[6]: 'THE_SKY_IS_THE_LIMITS'
 
-In [7]: c.convert_case(['Good Morning','Thank you'], 'camel')
+In [7]: c.convert_case('camel', ['Good Morning','Thank you'])
 Out[7]: ['goodMorning', 'thankYou']
 
 In [8]:
+```
+
+`StrCase` class support str, list, dict.
+
+```python
+data = "The sky is the limit"
+expect = 'the-sky-is-the-limit'
+s = StrCase(data)
+assert s.convert_case('kebab') == expect
+
+data = "The sky is the limit"
+expect = 'theSkyIsTheLimit'
+s = StrCase(data)
+assert s.convert_case(case='camel') == expect
+
+data = ["Good luck", "The sky is the limit" ]
+expect = ["good_luck", "the_sky_is_the_limit"]
+s = StrCase(data)
+assert s.convert_case() == expect
+
+data = {1: "Good luck", 2: "The sky is the limit" }
+expect = {1: "good_luck", 2: "the_sky_is_the_limit" }
+s = StrCase(data)
+assert s.convert_case() == expect
+
+data = {"Good luck": 1, "The sky is the limit": 2 }
+expect = {"good_luck": 1, "the_sky_is_the_limit": 2 }
+s = StrCase(data)
+assert s.convert_case(replace_for='key') == expect
+
+```
+
+`StrCase` class support nested objects.
+
+```python
+data = ["Good luck", "The sky is the limit",
+        {1: "Good luck", 2: "The sky is the limit" } ]
+expect = ["good_luck", "the_sky_is_the_limit",
+        {1: "good_luck", 2: "the_sky_is_the_limit" } ]
+s = StrCase(data)
+assert s.convert_case() == expect
 ```
 
 ### class uDict
@@ -529,7 +572,7 @@ assert ( data == expect and data != saved )
 
 ### class iDict
 
-Immutable Dict. iDict object hashable.
+Immutable Dict. iDict is hashable object.
 
 ```python
 In [1] from scrapinghelerp.utils import uDict
@@ -560,7 +603,9 @@ Out[8]: 2
 In [9]:
 ```
 
-#### chnage_dict_keys()
+### chnage_dict_keys()
+
+Change keys for dict objects.
 
 ```python
 data = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
@@ -578,7 +623,9 @@ assert ( data == expect and data != saved )
 ```
 
 
-`split_chunks()` Return split into even chunk_size elements.
+### `split_chunks()`
+
+Return split into even chunk_size elements.
 
 ```python
 data = [11,12,13,14, 21,22,23,31,32,33]
@@ -671,7 +718,9 @@ result = list(urange(10, 1))
 assert result == expect
 ```
 
-`urange()` support callable as step.
+### `urange()`
+
+support callable as step.
 
 ```python
 def  gen_step(val):
@@ -681,3 +730,30 @@ expect = [1, 4, 16]
 result = list(urange(1, 20, gen_step))
 assert result == expect
 ```
+
+### `rename_duplicate()`
+
+Rename duplicate string for list or values of dict.
+
+```python
+data = ["Apple", "Apple", "Banana", "Maple" ]
+expect = ["Apple", "Apple_01", "Banana", "Maple" ]
+result = rename_duplicates(data)
+assert result == expect
+
+data = ["Apple", "Apple", "Banana", "Maple" ]
+expect = ["Apple", "Apple__01", "Banana", "Maple" ]
+result = rename_duplicates(data, separator='__')
+assert result == expect
+
+data = ["Apple", "Apple", "Banana", "Maple" ]
+expect = ["Apple", "Apple_001", "Banana", "Maple" ]
+result = rename_duplicates(data, format="{:03}")
+assert result == expect
+
+data = ["Apple", ["Apple", "Apple", "Banana", "Maple" ]]
+expect = ["Apple", ["Apple", "Apple_01", "Banana", "Maple" ]]
+result = rename_duplicates(data)
+assert result == expect
+```
+

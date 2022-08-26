@@ -27,6 +27,8 @@ __all__ = [
     "ReplaceFor",
     "ReplaceForType",
     "split_chunks",
+    "rename_duplicates",
+    "remove_accents",
 ]
 
 class ReplaceFor(str, Enum):
@@ -235,6 +237,7 @@ def is_alpha(word: str)-> bool:
     except:
         return False
 
+
 def is_alnum(word: str)-> bool:
     """ Check word is alphabet and digits.
     :param word: str
@@ -247,6 +250,38 @@ def is_alnum(word: str)-> bool:
         return word.encode('ascii').isalnum()
     except:
         return False
+
+def remove_accents(self, data: Any) -> Any:
+    """Return the normal form for a Unicode string
+       using canonical decomposition."""
+
+    if isinstance(data, str):
+        data = ( normalize("NFD", data)
+                 .encode("ascii", "ignore")
+                 .decode("ascii") )
+    return data
+
+def rename_duplicates(
+        data: list,
+        separator: str = '_',
+        format = "{:02}"
+    ) -> list:
+    """Rename duplicated strings to append a number at the end."""
+
+    counts: Dict[str, int] = {}
+
+    if isinstance(data, list):
+        for i, val in enumerate(data):
+            if isinstance(val, list):
+                new_val = rename_duplicates(val)
+                data[i] = new_val
+            elif isinstance(val, str):
+                cur_count = counts.get(val, 0)
+                if cur_count > 0:
+                    data[i] = ( "{}{}".format(val, separator)
+                                + format.format(cur_count) )
+                counts[val] = cur_count + 1
+    return data
 
 @multidispatch
 def ordereddict_to_dict( obj: Any) -> dict:
@@ -728,6 +763,7 @@ def _split_chunks_str(
 class StrCase(object):
 
     def __init__(self, *args: Any):
+        self.depth = 0
         self.__NULL_VALUES = {"", None, np.nan, pd.NA}
 
         self.__supported_case = {
@@ -791,11 +827,13 @@ class StrCase(object):
                 'Expected at most 1 arguments, got {}.'.format(len(args)))
 
     def validate(self,
-            val: Union[str, list]
-        )-> Union[str, list]:
+            val: Union[str, list, dict]
+        )-> Union[str, list, dict]:
 
         if ( isinstance(val, str)
-             or isinstance(val, list) ):
+             or isinstance(val, list)
+             or isinstance(val, dict)
+             ):
             return val
         else:
             return None
@@ -845,125 +883,83 @@ class StrCase(object):
             r"\1", string)
         ).split()
 
-    @multimethod
-    def convert_case(self, obj: Any, *args: Any, **kwargs: Any) -> Any:
-        """ dispatch function """
-        return obj
+    def __convert_case_str(self,
+            case: str,
+            data: str,
+        )-> str:
 
-    @convert_case.register
-    def _convert_case_str(self,
-            obj: str,
+        if data is not '':
+            if case in self.__supported_case:
+                words = self.__supported_case[ case ]['splitor'](data)
+                data = self.__supported_case[ case ]['convertor'](words)
+            else:
+                raise ValueError(
+                    'Invalid casename, '
+                    'check class.show_supported_case().' )
+
+        return data
+
+    def __convert_case_dict(self,
+            case: str,
+            data: dict,
+            replace_for: ReplaceForType
+           ) -> dict:
+
+        self.depth += 1
+        if replace_for == ReplaceFor.KEY:
+            convdict = { self.convert_case(case, x, replace_for ):y
+                         for x, y in data.items() }
+        elif replace_for == ReplaceFor.VALUE:
+            convdict = { x:self.convert_case(case, y, replace_for )
+                         for x, y in data.items() }
+        self.depth -= 1
+        return convdict
+
+    def convert_case(self,
             case: str='snake',
-            na_values: str='',
-            *args: Any,
-            **kwargs: Any
+            data: Optional[Union[list,str, dict]] = None,
+            replace_for: ReplaceForType = ReplaceFor.VALUE
         ) -> str:
         """Convert case style for obj.
 
         Parameters
         ----------
-        obj: Any
-            convert case for obj
         case: str
             Preferred case type, i.e.:  (default: 'snake')
             check `.show_supported_case()`
 
-        na_values: str
-            Additional strings to recognize as NA/NaN.
-            default is '' for str, otherwise 'NaN'
-
-            i.e.: '', '#N/A', '#N/A N/A', '#NA', '-1.#IND', '-1.#QNAN',
-                  '-NaN', '-nan', '1.#IND', '1.#QNAN', '<NA>', 'N/A',
-                  'NA', 'NULL', 'NaN', 'n/a', 'nan', 'null'.
+        obj: Any
+            convert case for data
 
         Returns:
         --------
-        converted string: str
+        converted data: str
         """
-        if obj == str() and self.__origin:
-            obj = self.__origin
 
-        na_values = na_values or "" if isinstance(obj, str) else "NaN"
-        if obj in self.__NULL_VALUES:
-            return na_values
+        if replace_for not in get_args(ReplaceForType):
+            raise ValueError("replace_for must be 'key' or 'value'.")
 
-        if case in self.__supported_case:
-            words = self.__supported_case[ case ]['splitor'](obj)
-            string = self.__supported_case[ case ]['convertor'](words)
+        if data is None:
+            if self.depth == 0:
+                if self.__origin:
+                    data = self.__origin
+                else:
+                    raise ValueError('Expected at most 1 objets')
+            else:
+                return data
 
-        return string
-
-
-    @convert_case.register
-    def _convert_case_list(self,
-            obj: list,
-            case: str='snake',
-            na_values: str='',
-            *args: Any,
-            **kwargs: Any
-        ) -> list:
-        """Convert case style for list of obj."""
-
-        if obj == list():
-            obj = self.__origin
-
-        return [ self.convert_case(x, case, na_values) for x in obj ]
-
-
-    def replace_values(self, string: Any, mapping: Dict[str, str]) -> Any:
-        """Replace string values in string.
-
-        Parameters
-        ----------
-        string: Any
-            string.
-        mapping
-            Maps old values in the string to the new string.
-        """
-        if string in self.__NULL_VALUES:
-            return string
-
-        string = str(string)
-        for old_value, new_value in mapping.items():
-            # If the old value or the new value is not alphanumeric,
-            # add underscores to the beginning and end
-            # so the new value will be parsed correctly for self.convert_case()
-            new_val = (
-                r"{}".format(new_value)
-                if is_alnum(old_value) and is_alnum(new_value)
-                else r"_{}_".format(new_value)
-            )
-            string = re.sub(
-                r"{}".format(old_value),
-                new_val, string, flags=re.IGNORECASE)
-
-        return string
-
-    def remove_accents(self, string: Any) -> Any:
-        """Return the normal form for a Unicode string
-           using canonical decomposition."""
-
-        if not isinstance(string, str):
-            return string
-
-        return ( normalize("NFD", string)
-                 .encode("ascii", "ignore")
-                 .decode("ascii") )
-
-    def rename_duplicates(self, strings: list, case: str) -> Any:
-        """Rename duplicated strings to append a number at the end."""
-        counts: Dict[str, int] = {}
-
-        if case in self.__supported_case:
-            separaator = self.__supported_case[case]['separaator']
-
-        for i, val in enumerate(strings):
-            cur_count = counts.get(val, 0)
-            if cur_count > 0:
-                strings[i] = "{}{}{}".format(val, separaator, cur_count)
-            counts[val] = cur_count + 1
-
-        return strings
+        if isinstance(data, str):
+            return self.__convert_case_str(case, data)
+        elif isinstance(data, list):
+            self.depth += 1
+            convobj = [ self.convert_case(case, x, replace_for)
+                        for x in data ]
+            self.depth -= 1
+            return convobj
+        elif isinstance(data, dict):
+            return self.__convert_case_dict(case, data, replace_for)
+        else:
+            return data
 
     def __str__(self) -> str:
         return str(self.origin)
