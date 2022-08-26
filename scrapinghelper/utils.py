@@ -766,7 +766,7 @@ class StrCase(object):
         self.depth = 0
         self.__NULL_VALUES = {"", None, np.nan, pd.NA}
 
-        self.__supported_case = {
+        self.supported_case = iDict({
             "snake": {
                 'sample': 'convert_case',
                 'separaator': '_',
@@ -811,7 +811,7 @@ class StrCase(object):
                 'separaator': ' ',
                 'splitor': self.split_string,
                  'convertor': lambda x: " ".join(x).upper() },
-        }
+        })
 
         if len(args) == 0:
             self.__origin = None
@@ -845,8 +845,8 @@ class StrCase(object):
     def show_supported_case(self, verbose=False):
         header = { "case":  "sample" }
         case_sample = dict(header,
-           **{ case: "{}".format(self.__supported_case[case]['sample'])
-                    for case in self.__supported_case.keys() } )
+           **{ case: "{}".format(self.supported_case[case]['sample'])
+               for case in self.supported_case.keys() } )
         if verbose:
             print(case_sample)
         return case_sample
@@ -882,9 +882,9 @@ class StrCase(object):
         )-> str:
 
         if data != '':
-            if case in self.__supported_case:
-                words = self.__supported_case[ case ]['splitor'](data)
-                data = self.__supported_case[ case ]['convertor'](words)
+            if case in self.supported_case:
+                words = self.supported_case[ case ]['splitor'](data)
+                data = self.supported_case[ case ]['convertor'](words)
             else:
                 raise ValueError(
                     'Invalid casename, '
