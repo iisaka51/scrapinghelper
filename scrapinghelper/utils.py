@@ -10,7 +10,6 @@ from multimethod import multidispatch, multimethod
 from unicodedata import normalize
 from collections import OrderedDict
 from enum import Enum
-import snoop
 
 __all__ = [
     "urange",
