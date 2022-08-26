@@ -817,12 +817,7 @@ class StrCase(object):
         if len(args) == 0:
             self.__origin = None
         elif len(args) == 1:
-            if self.validate(args[0]) is not None:
-                self.__origin = args[0]
-            else:
-                raise TypeError(
-                    'Exprected str or list objects, got {}.'
-                    .format(type(args[0]) ))
+            self.__origin = self.validate(args[0])
         else:
             raise TypeError(
                 'Expected at most 1 arguments, got {}.'.format(len(args)))
@@ -837,19 +832,16 @@ class StrCase(object):
              ):
             return val
         else:
-            return None
+            raise TypeError( 'Expected str or list, dict objects, got {}.'
+                             .format(type(val)) )
 
     @property
     def origin(self):
         return self.__origin
 
     @origin.setter
-    @snoop
     def origin(self, val):
-        if self.validate(val):
-            self.__origin = val
-        else:
-            raise TypeError('Invalid Type')
+        self.__origin = self.validate(val)
 
     def show_supported_case(self, verbose=False):
         header = { "case":  "sample" }

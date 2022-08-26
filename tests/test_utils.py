@@ -35,7 +35,7 @@ class TestClass:
 
     def test_strcase_case04(self):
         data = 1
-        expect = "Exprected str or list objects, got <class 'int'>."
+        expect = "Expected str or list, dict objects, got <class 'int'>."
         with pytest.raises(TypeError) as e:
             s = StrCase(data)
         assert str(e.value) == expect
@@ -48,72 +48,87 @@ class TestClass:
         assert str(e.value) == expect
 
     def test_strcase_case06(self):
+        data = "The sky is the limit"
+        expect = 'StrCase("The sky is the limit")'
+        s = StrCase()
+        s.origin = data
+        assert s.__repr__() == expect
+
+    def test_strcase_case07(self):
+        data = 1
+        expect = "Expected str or list, dict objects, got <class 'int'>."
+        s = StrCase()
+        with pytest.raises(TypeError) as e:
+            s.origin = data
+        assert str(e.value) == expect
+
+    def test_strcase_case08(self):
         data = ["Good luck", "The sky is the limit"]
         expect = "StrCase(['Good luck', 'The sky is the limit'])"
         s = StrCase(data)
         assert s.__repr__() == expect
 
-    def test_strcase_case07(self):
+    def test_strcase_case09(self):
         data = ["Good luck", "The sky is the limit"]
         expect = "['Good luck', 'The sky is the limit']"
         s = StrCase(data)
         assert s.__str__() == expect
 
-    def test_strcase_case08(self):
+    def test_strcase_case10(self):
         data = ["Good luck", "The sky is the limit"]
         expect = "Good luck"
         s = StrCase(data)
         assert s.origin[0] == expect
 
-    def test_strcase_case09(self):
+    def test_strcase_case11(self):
         data = "The sky is the limit"
         expect = "the_sky_is_the_limit"
         s = StrCase(data)
         assert s.convert_case('snake') == expect
 
-    def test_strcase_case10(self):
+    def test_strcase_case12(self):
         data = ["Good luck", "The sky is the limit"]
         expect = ["good_luck", "the_sky_is_the_limit"]
         s = StrCase(data)
         assert s.convert_case('snake') == expect
 
-    def test_strcase_case11(self):
+    def test_strcase_case13(self):
         data = "The sky is the limit"
         expect = 'the_sky_is_the_limit'
         s = StrCase(data)
         assert s.convert_case() == expect
 
-    def test_strcase_case12(self):
+    def test_strcase_case14(self):
         data = "The sky is the limit"
         expect = 'the-sky-is-the-limit'
         s = StrCase(data)
         assert s.convert_case('kebab') == expect
 
-    def test_strcase_case13(self):
+    def test_strcase_case15(self):
         data = "The sky is the limit"
         expect = 'theSkyIsTheLimit'
         s = StrCase(data)
         assert s.convert_case(case='camel') == expect
 
-    def test_strcase_case14(self):
+    def test_strcase_case16(self):
         data = ["Good luck", "The sky is the limit" ]
         expect = ["good_luck", "the_sky_is_the_limit"]
         s = StrCase(data)
         assert s.convert_case() == expect
 
-    def test_strcase_case15(self):
+    def test_strcase_case17(self):
         data = {1: "Good luck", 2: "The sky is the limit" }
         expect = {1: "good_luck", 2: "the_sky_is_the_limit" }
         s = StrCase(data)
         assert s.convert_case() == expect
 
-    def test_strcase_case16(self):
+    def test_strcase_case18(self):
         data = {"Good luck": 1, "The sky is the limit": 2 }
         expect = {"good_luck": 1, "the_sky_is_the_limit": 2 }
         s = StrCase(data)
         assert s.convert_case(replace_for='key') == expect
 
-    def test_strcase_case17(self):
+    def test_strcase_case19(self):
         data = ["Good luck", "The sky is the limit",
                 {1: "Good luck", 2: "The sky is the limit" } ]
         expect = ["good_luck", "the_sky_is_the_limit",
@@ -121,7 +136,7 @@ class TestClass:
         s = StrCase(data)
         assert s.convert_case() == expect
 
-    def test_strcase_case18(self):
+    def test_strcase_case20(self):
         data = ["Good luck", None,
                 {1: "Good luck", 2: None } ]
         expect = ["good_luck", None,
@@ -129,13 +144,13 @@ class TestClass:
         s = StrCase(data)
         assert s.convert_case() == expect
 
-    def test_strcase_case19(self):
+    def test_strcase_case21(self):
         data = "Hello"
         expect = "Hello Python"
         s = StrCase(data)
         assert s.origin + " Python" == expect
 
-    def test_strcase_case20(self):
+    def test_strcase_case22(self):
         data = ["Hello"]
         expect = ["Hello", "Python"]
         s = StrCase(data)
@@ -947,6 +962,12 @@ class TestClass:
     def test_rename_duplicates_case05(self):
         data = ["Apple", ["Apple", "Apple", "Banana", "Maple" ], "Apple"]
         expect = ["Apple", ["Apple", "Apple_01", "Banana", "Maple" ], "Apple_01"]
+        result = rename_duplicates(data)
+        assert result == expect
+
+    def test_rename_duplicates_case06(self):
+        data = ["Apple", {1: "Apple", 2: "Apple", 3: "Banana", 4: "Maple" }]
+        expect = ["Apple", {1: "Apple", 2: "Apple", 3: "Banana", 4: "Maple" }]
         result = rename_duplicates(data)
         assert result == expect
 
