@@ -1,20 +1,22 @@
 import re
-import json
 from typing import (
     Any, Dict, Union, Optional, Hashable, Iterable, Sequence,
     Literal, get_args
 )
+from collections.abc import Mapping
+from collections import OrderedDict
+from unicodedata import normalize
+from enum import Enum
+#
 import numpy as np
 import pandas as pd
 from multimethod import multidispatch, multimethod
-from unicodedata import normalize
-from collections import OrderedDict
-from enum import Enum
 
 __all__ = [
     "urange",
     "uDict",
     "iDict",
+    "aDict",
     "StrCase",
     "is_alpha",
     "is_alnum",
@@ -119,7 +121,193 @@ class urange(object):
         return value
 
 
-class uDict(dict):
+class DictFactory(dict):
+    """ Factory class for custom dictionary """
+
+    def __repr__(self):
+        return '{0}({1})'.format(self.__class__.__name__, dict.__repr__(self))
+
+    def __str__(self):
+        return '{}'.format(dict.__repr__(self))
+
+    def __dir__(self):
+        return list(self.items())
+
+    def __getstate__(self):
+        return {k: v for k, v in self.items()}
+
+    def __setstate__(self, state):
+        self.clear()
+        self.update(state)
+
+    def update(self, *args, **kwargs):
+        for key, val in dict(*args, **kwargs).items():
+            self[key] = val
+
+    def get(self, key, default=None):
+        if key not in self:
+            return default
+        return self[key]
+
+    def setdefault(self, key, default=None):
+        if key not in self:
+            self[key] = default
+        return self[key]
+
+    def fromkeys(self,
+            seq: Sequence,
+            value: Any
+        ):
+        return type(self)(dict(self).fromkeys(seq, value))
+
+    def fromvalues(self,
+            seq: Sequence,
+            base: int=1
+        ):
+        return type(self)({base+x: seq[x] for x in range(len(seq))})
+
+    def fromlists(self,
+            keys: Sequence,
+            values: Sequence,
+        ):
+        zipobj = zip(keys, values)
+        return type(self)(dict(zipobj))
+
+
+class aDict(DictFactory):
+    def __init__(self, *args:Any, **kwargs:Any):
+         self.update(*args, **kwargs)
+
+    def __getattr__(self, k):
+        try:
+            return object.__getattribute__(self, k)
+        except AttributeError:
+            try:
+                return self[k]
+            except KeyError:
+                raise AttributeError(k)
+
+    def __str__(self):
+        return '{}'.format(self.__dict__)
+
+    def __setattr__(self, k, v):
+        try:
+            object.__getattribute__(self, k)
+        except AttributeError:
+            try:
+                if isinstance(v, Mapping) and not isinstance(v, type(self)):
+                    self[k] = self.from_dict(v)
+                else:
+                    self[k] = v
+            except:
+                raise AttributeError(k)
+        else:
+            object.__setattr__(self, k, v)
+
+    def __delattr__(self, k):
+        try:
+            object.__getattribute__(self, k)
+        except AttributeError:
+            try:
+                del self[k]
+            except KeyError:
+                raise AttributeError(k)
+        else:
+            object.__delattr__(self, k)
+
+    @property
+    def __dict__(self):
+        return self.to_dict(self)
+
+    def update(self, *args, **kwargs):
+        for key, val in dict(*args, **kwargs).items():
+            if isinstance(val, Mapping) and not isinstance(val, type(self)):
+                self[key] = self.from_dict(val)
+            else:
+                self[key] = val
+
+    def copy(self):
+        return self.from_dict(self)
+
+    def to_dict(self, obj):
+        """ Recursively converts aDict to dict.  """
+        holding_obj = dict()
+
+        def convert_loop(obj):
+            try:
+                return holding_obj[id(obj)]
+            except KeyError:
+                pass
+
+            holding_obj[id(obj)] = partial = pre_convert(obj)
+            return post_convert(partial, obj)
+
+        def pre_convert(obj):
+            if isinstance(obj, Mapping):
+                return dict()
+            elif isinstance(obj, list):
+                return type(obj)()
+            elif isinstance(obj, tuple):
+                type_factory = getattr(obj, "_make", type(obj))
+                return type_factory(convert_loop(item) for item in obj)
+            else:
+                return obj
+
+        def post_convert(partial, obj):
+            if isinstance(obj, Mapping):
+                partial.update((k, convert_loop(obj[k])) for k in obj.keys())
+            elif isinstance(obj, list):
+                partial.extend(convert_loop(v) for v in obj)
+            elif isinstance(obj, tuple):
+                for (value_partial, value) in zip(partial, obj):
+                    post_convert(value_partial, value)
+
+            return partial
+
+        return convert_loop(obj)
+
+    @classmethod
+    def from_dict(cls, obj, factory=None):
+        """ Recursively converts from dict to aDict. """
+        factory = factory or cls
+        holding_obj = dict()
+
+        def convert_loop(obj):
+            try:
+                return holding_obj[id(obj)]
+            except KeyError:
+                pass
+
+            holding_obj[id(obj)] = partial = pre_convert(obj)
+            return post_convert(partial, obj)
+
+        def pre_convert(obj):
+            if isinstance(obj, Mapping):
+                return factory({})
+            elif isinstance(obj, list):
+                return type(obj)()
+            elif isinstance(obj, tuple):
+                type_factory = getattr(obj, "_make", type(obj))
+                return type_factory(convert_loop(item) for item in obj)
+            else:
+                return obj
+
+        def post_convert(partial, obj):
+            if isinstance(obj, Mapping):
+                partial.update((key, convert_loop(obj[key]))
+                                for key in obj.keys() )
+            elif isinstance(obj, list):
+                partial.extend(convert_loop(item) for item in obj)
+            elif isinstance(obj, tuple):
+                for (item_partial, item) in zip(partial, obj):
+                    post_convert(item_partial, item)
+
+            return partial
+
+        return convert_loop(obj)
+
+
+class uDict(DictFactory):
     __hash__ = None
 
     def __missing__(self, key):
@@ -144,35 +332,18 @@ class uDict(dict):
         else:
             return work_dict
 
-    def fromkeys(self,
-            seq: Sequence,
-            value: Any
-        ):
-        return type(self)(dict(self).fromkeys(seq, value))
+class iDict(DictFactory):
+    def __init__(self, *args:Any, **kwargs:Any):
+         super().__init__(*args, **kwargs)
 
-    def fromvalues(self,
-            seq: Sequence,
-            base: int=1
-        ):
-        return type(self)({base+x: seq[x] for x in range(len(seq))})
-
-    def fromlists(self,
-            keys: Sequence,
-            values: Sequence,
-        ):
-        zipobj = zip(keys, values)
-        return type(self)(dict(zipobj))
-
-    def __str__(self):
-        return "{}".format(dict(self).__str__())
-
-    def __repr__(self):
-        return 'uDict({})'.format(dict(self).__str__())
-
-
-class iDict(dict):
     def __missing__(self, key):
         return None
+
+    def __getattr__(self, attribute):
+        if attribute in ('clear', 'update', 'pop', 'popitem', 'setdefault'):
+            raise AttributeError(
+                r"{} object has no attribute {}"
+                .format(type(self).__name__, attribute) )
 
     def __setitem__(self, key, value):
         raise TypeError(
@@ -193,31 +364,6 @@ class iDict(dict):
 
     def __hash__(self):
         return hash(tuple(sorted(self.items())))
-
-    def fromkeys(self,
-            seq: Sequence,
-            value: Any
-        ):
-        return type(self)(dict(self).fromkeys(seq, value))
-
-    def fromvalues(self,
-            seq: Sequence,
-            base: int=1
-        ):
-        return type(self)({base+x: seq[x] for x in range(len(seq))})
-
-    def fromlists(self,
-            keys: Sequence,
-            values: Sequence,
-        ):
-        zipobj = zip(keys, values)
-        return type(self)(dict(zipobj))
-
-    def __str__(self):
-        return "{}".format(dict(self).__str__())
-
-    def __repr__(self):
-        return 'iDict({})'.format(dict(self).__str__())
 
 
 def is_alpha(word: str)-> bool:

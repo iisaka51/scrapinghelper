@@ -6,7 +6,7 @@ sys.path.insert(0,"../scrapinghelper")
 
 from scrapinghelper.utils import (
     StrCase, is_alpha, is_alnum, omit_values, replace_values,
-    add_df, df_compare, change_dict_keys, uDict, iDict,
+    add_df, df_compare, change_dict_keys, uDict, iDict, aDict,
     split_chunks, urange, rename_duplicates,
 )
 from pprint import pprint
@@ -535,6 +535,36 @@ class TestClass:
         change_dict_keys(data, 'April', 'Apr', inplace=True)
         assert data == expect
 
+    def test_adict_case01(self):
+        data = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
+        expect = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
+        result = aDict(data)
+        assert result == data
+
+    def test_adict_case02(self):
+        data = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
+        expect = 2
+        result = aDict(data)
+        assert result.February == expect
+
+    def test_adict_case03(self):
+        data = { 'one': { 'two': { 'three': { 'four': 4 }}}}
+        expect = 4
+        result = aDict(data)
+        assert result.one.two.three.four == expect
+
+    def test_adict_case04(self):
+        data = { 'one': { 'two': { 'three': { 'four': 4 }}}}
+        expect = "{'one': {'two': {'three': {'four': 4}}}}"
+        result = aDict(data)
+        assert result.__str__() == expect
+
+    def test_adict_case05(self):
+        data = { 'one': { 'two': { 'three': { 'four': 4 }}}}
+        expect = "aDict({'one': aDict({'two': aDict({'three': aDict({'four': 4})})})})"
+        result = aDict(data)
+        assert result.__repr__() == expect
+
     def test_udict_case01(self):
         data = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
         expect = { 'January': 1, 'February': 2, 'March': 3, 'April': 4 }
@@ -655,7 +685,7 @@ class TestClass:
     def test_idict_case05(self):
         data = iDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
         with pytest.raises(AttributeError) as e:
-            result  = data.pop()
+            result  = data.pop(0)
         assert str(e.value) == 'iDict object has no attribute pop'
 
     def test_idict_case06(self):
@@ -673,7 +703,7 @@ class TestClass:
     def test_idict_case08(self):
         data = iDict({ 'January': 1, 'February': 2, 'March': 3, 'April': 4 })
         with pytest.raises(AttributeError) as e:
-            data.setdefault('May', 5)
+            data.setdefault('March', 3)
         assert str(e.value) == 'iDict object has no attribute setdefault'
 
     def test_idict_case09(self):
