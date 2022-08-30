@@ -5,6 +5,7 @@ from typing import (
 )
 from collections.abc import Mapping
 from collections import OrderedDict
+import json
 from unicodedata import normalize
 from enum import Enum
 #
@@ -38,6 +39,8 @@ class ReplaceFor(str, Enum):
   VALUE = "value"
 
 ReplaceForType = Literal[ReplaceFor.KEY, ReplaceFor.VALUE]
+
+__RE_FLAGS = [ re.UNICODE, ( re.IGNORECASE + re.UNICODE) ]
 
 class urange(object):
     def __init__(self,
@@ -156,22 +159,63 @@ class DictFactory(dict):
 
     def fromkeys(self,
             seq: Sequence,
-            value: Any
+            value: Any,
+            inplace: bool=False,
         ):
-        return type(self)(dict(self).fromkeys(seq, value))
+        """Create a new dictionary with keys from iterable and values set to value.
+           If set `True` to `inplace`, perform operation in-place.
+        """
+        new = type(self)(dict(self).fromkeys(seq, value))
+        if inplace:
+            self.update(new)
+        else:
+            return new
 
     def fromvalues(self,
             seq: Sequence,
-            base: int=1
+            base: int=1,
+            inplace: bool=False,
         ):
-        return type(self)({base+x: seq[x] for x in range(len(seq))})
+        """Create a new dictionary from list of values.
+           keys automaticaly generate as interger.
+           `base` is the starting number.
+           If set `True` to `inplace`, perform operation in-place.
+        """
+        new = type(self)({base+x: seq[x] for x in range(len(seq))})
+        if inplace:
+            self.update(new)
+        else:
+            return new
 
     def fromlists(self,
             keys: Sequence,
             values: Sequence,
+            inplace: bool=False,
         ):
+        """Create a new dictionary from two list as keys and values.
+           Only the number of elements in the shorter of the two lists is processed.
+           If set `True` to `inplace`, perform operation in-place.
+        """
         zipobj = zip(keys, values)
-        return type(self)(dict(zipobj))
+        new = type(self)(dict(zipobj))
+        if inplace:
+            self.update(new)
+        else:
+            return new
+
+    def to_json(self, **options) ->str:
+        """Generate a new json strings. """
+        return json.dumps(self, **options)
+
+    def from_json(self,
+        stream: str,
+        inplace: bool=False,
+        **options: Any):
+        """Create a new dictionary from json strings."""
+        if inplace:
+            self.update(json.loads(stream, **options))
+        else:
+            return type(self)(json.loads(stream, **options))
 
 
 class aDict(DictFactory):
@@ -365,6 +409,57 @@ class iDict(DictFactory):
     def __hash__(self):
         return hash(tuple(sorted(self.items())))
 
+    def fromkeys(self,
+            seq: Sequence,
+            value: Any,
+            inplace: bool=False,
+        ) ->Optional[dict]:
+        """Create a new dictionary with keys from iterable and values set to value.
+           `inplace` parameter will alway be ignored.
+        """
+        if not inplace:
+            return type(self)(dict(self).fromkeys(seq, value))
+
+    def fromvalues(self,
+            seq: Sequence,
+            base: int=1,
+            inplace: bool=False,
+        ) ->Optional[dict]:
+        """Create a new dictionary from list of values.
+           keys automaticaly generate as interger.
+           `base` is the number of base.
+           `inplace` parameter will alway be ignored.
+        """
+        if not inplace:
+            return type(self)({base+x: seq[x] for x in range(len(seq))})
+
+    def fromlists(self,
+            keys: Sequence,
+            values: Sequence,
+            inplace: bool=False,
+        ) ->Optional[dict]:
+        """Create a new dictionary from two list as keys and values.
+           `inplace` parameter will alway be ignored.
+        """
+        if not inplace:
+            zipobj = zip(keys, values)
+            return type(self)(dict(zipobj))
+
+    def to_json(self,
+            **options) ->str:
+        """Generate a new json strings.
+        """
+        return json.dumps(self, **options)
+
+    def from_json(self,
+            stream: str,
+            inplace: bool=False,
+            **options: Any):
+        """Create a new dictionary from json strings.
+           `inplace` parameter will alway be ignored.
+        """
+        if not inplace:
+            return type(self)(json.loads(stream, **options))
 
 def is_alpha(word: str)-> bool:
     """ Check word is alphabet.
@@ -386,10 +481,14 @@ def is_alpha(word: str)-> bool:
 
 def is_alnum(word: str)-> bool:
     """ Check word is alphabet and digits.
-    :param word: str
+    Parameters
+    ----------
+    word: str
         any string
 
-    "returns:  validate result
+    Reterns
+    -------
+    validate result
         if all characters of word, return ``True`` otherwise return ``False``
     """
     try:
@@ -540,11 +639,10 @@ def _replace_values_multi(
         if not inplace:
             values = values.copy()
 
-        flags = [ re.UNICODE, ( re.IGNORECASE + re.UNICODE) ]
         for n in range(len(values)):
             for old, new in replace.items():
                 values[n] = re.sub(old, new,  values[n],
-                                   flags = flags[ignore_case])
+                                   flags = __RE_FLAGS[ignore_case])
         if not inplace:
             return values
 
@@ -569,38 +667,37 @@ def _replace_values_dict_multi(
            If replace_value set 'key', replace 'key' of dict.
            default is 'value'
         """
+
+        def replace_val(value, replace, ignore_case):
+            for old, new in replace.items():
+                if ignore_case :
+                    if value.lower() == old.lower():
+                        return new
+                    else:
+                        value
+                else:
+                    if value == old:
+                        return new
+                    else:
+                        value
+            return value
+
         if replace_for not in get_args(ReplaceForType):
             raise ValueError("replace_for must be 'key' or 'value'.")
 
+        mapper={}
         if replace_for == ReplaceFor.KEY:
-            mapper={}
-            for key, value in list(values.items()):
-                for old, new in replace.items():
-                    new_key = replace_values(key, [old], new,
-                                             ignore_case=ignore_case)
-                    if new == new_key:
-                        mapper[key] = new_key
+            keys = [ replace_val(x, replace, ignore_case)
+                     for x in values.keys() ]
+            vals = list(values.values())
+        elif replace_for == ReplaceFor.VALUE:
+            keys = list(values.keys())
+            vals = [replace_val(x, replace, ignore_case)
+                    for x in values.values() ]
+        else:
+            return None
 
-            workdict = values.copy()
-            for key, value in list(workdict.items()):
-                workdict[mapper.get(key, key)] = workdict.pop(key)
-
-        if replace_for == ReplaceFor.VALUE:
-            workdict = values.copy()
-            mapper={}
-            for key, value in list(workdict.items()):
-                for old, new in replace.items():
-                    if isinstance(value, str) and ignore_case:
-                        new_val = replace_values(value, [old], new,
-                                         ignore_case=ignore_case)
-                        if new == new_val:
-                            mapper[value] = new_val
-                    else:
-                        if value == old:
-                            mapper[value] = new
-
-            for key, value in list(workdict.items()):
-                workdict[key] = mapper.get(value, workdict.pop(key))
+        workdict = uDict().fromlists(keys, vals)
 
         if inplace:
             values.update(workdict)
@@ -625,7 +722,7 @@ def _replace_values_single_str(
         for n in range(len(values)):
             for old in replace_from:
                 values[n] = re.sub( old, replace_to, values[n],
-                                   flags = flags[ignore_case])
+                                   flags = __RE_FLAGS[ignore_case])
         if not inplace:
             return values
 
@@ -645,6 +742,8 @@ def _replace_values_single_obj(
 
         for n in range(len(values)):
             for old in replace_from:
+                if isinstance(values[n], str) and ignore_case:
+                    new = replace_values(values[n], [old], replace_to)
                 if values[n] ==  old:
                     values[n] = new
 
@@ -662,16 +761,38 @@ def _replace_values_text(
         **kwargs: Any,
     )-> Hashable:
 
-        flags = [ re.UNICODE, ( re.IGNORECASE + re.UNICODE) ]
-        for old in replace_from:
-            if isinstance(old, str) and isinstance(replace_to, str):
-                values = re.sub( old, replace_to, values,
-                             flags = flags[ignore_case])
-            elif old == origin:
-                values = replace_to
+   for old in replace_from:
+       if isinstance(old, str):
+           if not isinstance(replace_to, str):
+               replace_to = str(replace_to)
+           values = re.sub(old, replace_to, values,
+                         flags = __RE_FLAGS[ignore_case])
+       else:
+           if values == old:
+               values = replace_to
 
-        return values
+   return values
 
+@replace_values.register(str, dict)
+def _replace_values_text_multi(
+        values: str,
+        replace: dict,
+        *,
+        ignore_case: bool=False,
+        **kwargs: Any,
+    )-> Hashable:
+
+   for old, replace_to in replace.items():
+       if isinstance(old, str):
+           if not isinstance(replace_to, str):
+               replace_to = str(replace_to)
+           values = re.sub(old, replace_to, values,
+                         flags = __RE_FLAGS[ignore_case])
+       else:
+           if values == old:
+               values = replace_to
+
+   return values
 
 @replace_values.register(Union[int, float], list, Any)
 def _replace_values_number(
@@ -680,10 +801,10 @@ def _replace_values_number(
         replace_to: Any,
         **kwargs: Any,
     )-> str:
-        if values in replace_from:
-            return replace_to
-        else:
-            return values
+   if values in replace_from:
+       return replace_to
+   else:
+       return values
 
 
 @multidispatch
@@ -701,17 +822,17 @@ def _omit_values_multi(
         ignore_case: bool=False,
         drop: bool=False
     )-> list:
-        if not inplace:
-            values = values.copy()
+   if not inplace:
+       values = values.copy()
 
-        values =  replace_values(values, omits, '', ignore_case=ignore_case)
-        if drop:
-            count = values.count('')
-            for _ in range(count):
-                values.remove('')
+   values =  replace_values(values, omits, '', ignore_case=ignore_case)
+   if drop:
+       count = values.count('')
+       for _ in range(count):
+           values.remove('')
 
-        if not inplace:
-            return values
+   if not inplace:
+       return values
 
 @omit_values.register(str, list)
 def omit_values_single(
@@ -720,7 +841,7 @@ def omit_values_single(
         *,
         ignore_case: bool=False,
     )-> str:
-        return replace_values(values, omits, '', ignore_case=ignore_case)
+    return replace_values(values, omits, '', ignore_case=ignore_case)
 
 
 def add_df(
@@ -729,13 +850,13 @@ def add_df(
         omits: list=[]
     ) ->pd.DataFrame:
 
-        if omits:
-            values = self.omit_chars(values,omits)
-            columns = self.omit_chars(columns,omits)
+   if omits:
+       values = omit_values(values,omits)
+       columns = omit_values(columns,omits)
 
-        # Since Pandas 1.3.0
-        df = pd.DataFrame(values,index=columns)._maybe_depup_names(columns)
-        self.df = pd.concat([self.df,df.T])
+   # Since Pandas 1.3.0
+   df = pd.DataFrame(values,index=columns)._maybe_depup_names(columns)
+   self.df = pd.concat([self.df,df.T])
 
 def df_compare(
         df1: pd.DataFrame,
@@ -962,12 +1083,12 @@ class StrCase(object):
         if len(args) == 0:
             self.__origin = None
         elif len(args) == 1:
-            self.__origin = self.validate(args[0])
+            self.__origin = self.__validate(args[0])
         else:
             raise TypeError(
                 'Expected at most 1 arguments, got {}.'.format(len(args)))
 
-    def validate(self,
+    def __validate(self,
             val: Union[str, list, dict]
         )-> Union[str, list, dict]:
 
@@ -986,7 +1107,7 @@ class StrCase(object):
 
     @origin.setter
     def origin(self, val):
-        self.__origin = self.validate(val)
+        self.__origin = self.__validate(val)
 
     def show_supported_case(self, verbose=False):
         header = { "case":  "sample" }
