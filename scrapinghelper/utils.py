@@ -133,9 +133,6 @@ class DictFactory(dict):
     def __str__(self):
         return '{}'.format(dict.__repr__(self))
 
-    def __dir__(self):
-        return list(self.items())
-
     def __getstate__(self):
         return {k: v for k, v in self.items()}
 
