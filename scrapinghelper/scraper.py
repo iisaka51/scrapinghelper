@@ -307,7 +307,6 @@ class Scraper(object):
         self.response = self.session.run(get_page)[0]
         return self.response
 
-    @snoop
     def request(self,
                 url: URL,
                 timeout: int=0,
