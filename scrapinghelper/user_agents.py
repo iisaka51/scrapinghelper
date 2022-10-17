@@ -59,7 +59,7 @@ class UserAgent(object):
     def get_random_user_agent(self) ->str:
         user_agent = np.random.choice(self.user_agents.user_agent.to_list(),
                                       replace=True, size=1)
-        return user_agent
+        return list(user_agent)[0]
 
     def get_next_user_agent(self) ->str:
         return next(self.user_agent_pool)
