@@ -1,4 +1,3 @@
-import snoop
 import os
 import time
 import asyncio
@@ -152,7 +151,6 @@ class AsyncHTMLSession(requests_html.BaseSession):
 
 
 class Scraper(object):
-    @snoop
     def __init__(self,
                  timeout: int=0,
                  sleep: int=10,
