@@ -354,7 +354,8 @@ class Scraper(object):
                 render_kwargs['timeout'] = render_kwargs.get('timtout',
                                                               self.timeout )
                 sleep = render_kwargs.get('sleep', self.sleep)
-                render_kwargs['sleep'] = np.random.randint(0,sleep)
+                if sleep:
+                    render_kwargs['sleep'] = np.random.randint(0,sleep)
                 self.response.html.render( **render_kwargs )
             return self.response
 
