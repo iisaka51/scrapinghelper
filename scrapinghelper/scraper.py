@@ -305,7 +305,7 @@ class Scraper(object):
             if render:
                 await response.html.arender(
                                 timeout=self.timeout,
-                                sleep=np.random.randint(2,self.sleep),
+                                sleep=np.random.randint(0,self.sleep),
                                 **render_kwargs,
                                 )
             return response

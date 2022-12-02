@@ -12,23 +12,17 @@ def get_version(rel_path):
     else:
         raise RuntimeError("Unable to find version string.")
 
+def requires_from_file(filename):
+    return open(filename).read().splitlines()
+
 LONG_DESCRIPTION = (this_directory / "README.md").read_text()
 SHORT_DESCRIPTION = "Utility for web scraping."
-
-requirements = [
-    "request_html",
-    "requests",
-    "types-requests",
-    "loguru",
-    "numpy",
-    "pandas",
-]
 
 setup(
     name="scrapinghelper",
     version=get_version('scrapinghelper/versions.py'),
     license="MIT",
-    install_requirements=requirements,
+    install_requires=requires_from_file('requirements.txt'),
     extras_require={
         "socks": ["PySocks>=1.5.6, !=1.5.7"],
         "converter": [ "multimethod>=1.8" ],
