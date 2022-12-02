@@ -226,6 +226,12 @@ class Scraper(object):
         else:
             logger.disable(__name__)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        del self
+
     def get_random_user_agent(self) -> str:
         return self.user_agent.get_random_user_agent()
 
@@ -348,7 +354,7 @@ class Scraper(object):
                 render_kwargs['timeout'] = render_kwargs.get('timtout',
                                                               self.timeout )
                 sleep = render_kwargs.get('sleep', self.sleep)
-                render_kwargs['sleep'] = np.random.randint(2,sleep)
+                render_kwargs['sleep'] = np.random.randint(0,sleep)
                 self.response.html.render( **render_kwargs )
             return self.response
 
