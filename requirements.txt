@@ -1,4 +1,4 @@
-request_html>=0.10.0
+requests_html>=0.10.0
 requests>=0.10.0
 types-requests>=2.27.29
 loguru>=0.6.0
